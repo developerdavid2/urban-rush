@@ -5,6 +5,8 @@ import cors from "cors";
 import express from "express";
 import http from "http";
 import { ENV } from "./config/env";
+import connectDB from "./config/db";
+import { clerkMiddleware } from "@clerk/express";
 
 const app = express();
 
@@ -16,6 +18,7 @@ app.use(
   })
 );
 
+app.use(clerkMiddleware()); // req.auth will be available
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
@@ -42,4 +45,5 @@ const server = http.createServer(app);
 
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} (${ENV.NODE_ENV})`);
+  connectDB();
 });
