@@ -7,6 +7,8 @@ import http from "http";
 import { ENV } from "./config/env";
 import connectDB from "./config/db";
 import { clerkMiddleware } from "@clerk/express";
+import { serve } from "inngest/express";
+import { functions, inngest } from "./config/inngest";
 
 const app = express();
 
@@ -18,12 +20,14 @@ app.use(
   })
 );
 
+app.use(express.json());
 app.use(clerkMiddleware()); // req.auth will be available
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
+app.use("/api/inngest", serve({ client: inngest, functions }));
 // API Router
 // const apiRouter = express.Router();
 
