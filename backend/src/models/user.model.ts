@@ -55,6 +55,9 @@ const userSchema = new mongoose.Schema<UserDocument>(
   },
   { timestamps: true }
 );
+
+userSchema.index({ clerkId: 1, email: 1 }, { unique: true });
+
 const User = mongoose.model<UserDocument>("User", userSchema);
 
 export default User;
