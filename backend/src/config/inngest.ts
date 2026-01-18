@@ -1,6 +1,6 @@
 import { Inngest } from "inngest";
 import connectDB from "./db";
-import User from "../models/user.model";
+import User from "../models/userModel";
 import { UserDocument } from "../types/user";
 
 export const inngest = new Inngest({ id: "urban-rush-app" });

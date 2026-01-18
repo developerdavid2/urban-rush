@@ -10,6 +10,10 @@ import { clerkMiddleware } from "@clerk/express";
 import { serve } from "inngest/express";
 import { functions, inngest } from "./config/inngest";
 
+import productRouter from "./routes/product.route";
+import orderRouter from "./routes/order.route";
+import userRouter from "./routes/user.route";
+
 const app = express();
 
 // Middleware
@@ -28,8 +32,11 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
-// API Router
-// const apiRouter = express.Router();
+
+// ROUTES
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/products", productRouter);
+app.use("/api/v1/orders", orderRouter);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
