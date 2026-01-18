@@ -6,7 +6,7 @@ export interface ProductDocument extends Document {
   price: number;
   priceDiscount?: number;
   summary: string;
-  description?: string;
+  description: string;
   images: string[];
   category: string;
   stock: number;

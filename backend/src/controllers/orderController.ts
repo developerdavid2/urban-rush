@@ -10,10 +10,11 @@ export const getAllOrders = async (req: Request, res: Response) => {
       .populate("userId", "name email")
       .sort({ createdAt: -1 });
 
-    if (!orders) {
-      return res.status(404).json({
+    if (orders.length === 0) {
+      return res.status(200).json({
         success: false,
         message: "No orders found",
+        data: [],
       });
     }
 
@@ -22,10 +23,10 @@ export const getAllOrders = async (req: Request, res: Response) => {
       data: orders,
     });
   } catch (error) {
+    console.error("Error fetching orders", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch orders",
-      error: error,
     });
   }
 };
@@ -50,10 +51,10 @@ export const getOrderById = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
+    console.log("Error getting order", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch order",
-      error: error,
     });
   }
 };
@@ -101,10 +102,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     await order.save();
     res.status(200).json({ success: true, data: order });
   } catch (error) {
+    console.error("Error updating status", error);
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
-      error: error,
     });
   }
 };
@@ -136,10 +137,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    console.error("Error fetching dashboard stats", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard stats",
-      error: error,
     });
   }
 };

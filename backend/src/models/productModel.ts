@@ -44,6 +44,7 @@ const productSchema = new mongoose.Schema<ProductDocument>(
     },
     images: {
       type: [String],
+      required: [true, "A product must have at least one image"],
       validate: {
         validator: function (arr: string[]) {
           return arr.length > 0 && arr.length <= 4;
