@@ -8,7 +8,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     const products = await Product.find().sort({ createdAt: -1 });
 
     if (products.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "No products found",
       });
