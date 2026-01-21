@@ -1,6 +1,7 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
 export interface Address {
+  _id?: Types.ObjectId;
   fullName: string;
   label: string;
   street: string;
