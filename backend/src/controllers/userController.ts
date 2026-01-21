@@ -103,7 +103,6 @@ export const addAddress = async (req: Request, res: Response) => {
     } = req.body;
 
     const newAddress = {
-      id: new Date().getTime().toString(),
       fullName,
       label,
       street,
@@ -281,7 +280,7 @@ export const addToWishlist = async (req: Request, res: Response) => {
         message: "Product already in wishlist",
       });
     }
-    user.wishlist.push(productId);
+    user.wishlist.push(new mongoose.Types.ObjectId(productId));
     await user.save();
     res.status(200).json({
       success: true,
