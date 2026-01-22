@@ -18,6 +18,7 @@ const getCurrentUser = async (req, res) => {
         res.status(200).json({
             success: true,
             data: user,
+            message: "Current user fetched successfully",
         });
     }
     catch (error) {
@@ -42,6 +43,7 @@ const getAllUsers = async (req, res) => {
             success: true,
             results: users.length,
             data: users,
+            message: "Users fetched successfully",
         });
     }
     catch (error) {
@@ -56,7 +58,7 @@ exports.getAllUsers = getAllUsers;
 const getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
-        if (!userId) {
+        if (!mongoose_1.default.isValidObjectId(userId)) {
             return res.status(400).json({
                 success: false,
                 message: "User ID is required",
@@ -72,6 +74,7 @@ const getUserById = async (req, res) => {
         res.status(200).json({
             success: true,
             data: user,
+            message: "User fetched successfully",
         });
     }
     catch (error) {
@@ -94,7 +97,6 @@ const addAddress = async (req, res) => {
         }
         const { fullName, label, street, city, state, postalCode, country, phoneNumber, isDefault, } = req.body;
         const newAddress = {
-            id: new Date().getTime().toString(),
             fullName,
             label,
             street,
@@ -110,6 +112,7 @@ const addAddress = async (req, res) => {
         res.status(201).json({
             success: true,
             data: user,
+            message: "Address added successfully",
         });
     }
     catch (error) {
@@ -133,6 +136,7 @@ const getMyAddresses = async (req, res) => {
         res.status(200).json({
             success: true,
             data: user.addresses,
+            message: "Addresses fetched successfully",
         });
     }
     catch (error) {
@@ -150,7 +154,12 @@ const updateAddress = async (req, res) => {
         const { fullName, label, street, city, state, postalCode, country, phoneNumber, isDefault, } = req.body;
         const user = await userModel_1.default.findById(req.user._id);
         if (!user)
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ sucess: false, message: "User not found" });
+        if (!mongoose_1.default.isValidObjectId(addressId)) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid address ID" });
+        }
         const address = user.addresses.find((a) => a._id.toString() === addressId);
         if (!address)
             return res.status(404).json({ message: "Address not found" });
@@ -195,9 +204,14 @@ const deleteAddress = async (req, res) => {
                 message: "User not found",
             });
         }
+        if (!mongoose_1.default.isValidObjectId(addressId)) {
+            return res.status(400).json({ message: "Invalid address ID" });
+        }
         const address = user.addresses.find((a) => a._id.toString() === addressId);
         if (!address)
-            return res.status(404).json({ message: "Address not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Invalid address ID" });
         user.addresses = user.addresses.filter((a) => a._id.toString() !== addressId);
         await user.save();
         res.status(200).json({
@@ -258,7 +272,7 @@ const addToWishlist = async (req, res) => {
                 message: "Product already in wishlist",
             });
         }
-        user.wishlist.push(productId);
+        user.wishlist.push(new mongoose_1.default.Types.ObjectId(productId));
         await user.save();
         res.status(200).json({
             success: true,

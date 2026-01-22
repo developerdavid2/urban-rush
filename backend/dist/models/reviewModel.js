@@ -1,6 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+// models/review.model.ts
 const mongoose_1 = require("mongoose");
+const productModel_1 = __importDefault(require("./productModel"));
 const reviewSchema = new mongoose_1.Schema({
     review: {
         type: String,
@@ -38,6 +43,31 @@ const reviewSchema = new mongoose_1.Schema({
     toObject: { virtuals: true },
 });
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
+reviewSchema.statics.updateProductRatings = async function (productId) {
+    const stats = await this.aggregate([
+        { $match: { productId } },
+        {
+            $group: {
+                _id: "$productId",
+                ratingsQuantity: { $sum: 1 },
+                ratingsAverage: { $avg: "$rating" },
+            },
+        },
+    ]);
+    if (stats.length > 0) {
+        const { ratingsQuantity, ratingsAverage } = stats[0];
+        await productModel_1.default.findByIdAndUpdate(productId, {
+            ratingsQuantity,
+            ratingsAverage: Math.round(ratingsAverage * 10) / 10,
+        });
+    }
+    else {
+        await productModel_1.default.findByIdAndUpdate(productId, {
+            ratingsQuantity: 0,
+            ratingsAverage: 0,
+        });
+    }
+};
 const Review = (0, mongoose_1.model)("Review", reviewSchema);
 exports.default = Review;
 //# sourceMappingURL=reviewModel.js.map

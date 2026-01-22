@@ -1,7 +1,13 @@
-import { model, Schema } from "mongoose";
+// models/review.model.ts
+import { Model, model, Schema, Types } from "mongoose";
 import { ReviewDocument } from "../types/review";
+import Product from "./productModel";
 
-const reviewSchema = new Schema<ReviewDocument>(
+export interface ReviewModel extends Model<ReviewDocument> {
+  updateProductRatings(productId: Types.ObjectId): Promise<void>;
+}
+
+const reviewSchema = new Schema<ReviewDocument, ReviewModel>(
   {
     review: {
       type: String,
@@ -15,7 +21,6 @@ const reviewSchema = new Schema<ReviewDocument>(
       min: [1, "Rating must be at least 1"],
       max: [5, "Rating must be at most 5"],
     },
-
     productId: {
       type: Schema.Types.ObjectId,
       ref: "Product",
@@ -44,5 +49,34 @@ const reviewSchema = new Schema<ReviewDocument>(
 
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
-const Review = model<ReviewDocument>("Review", reviewSchema);
+reviewSchema.statics.updateProductRatings = async function (
+  productId: Types.ObjectId
+) {
+  const stats = await this.aggregate([
+    { $match: { productId } },
+    {
+      $group: {
+        _id: "$productId",
+        ratingsQuantity: { $sum: 1 },
+        ratingsAverage: { $avg: "$rating" },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    const { ratingsQuantity, ratingsAverage } = stats[0];
+    await Product.findByIdAndUpdate(productId, {
+      ratingsQuantity,
+      ratingsAverage: Math.round(ratingsAverage * 10) / 10,
+    });
+  } else {
+    await Product.findByIdAndUpdate(productId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 0,
+    });
+  }
+};
+
+const Review = model<ReviewDocument, ReviewModel>("Review", reviewSchema);
+
 export default Review;

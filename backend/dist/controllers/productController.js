@@ -7,6 +7,7 @@ exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.
 const promises_1 = __importDefault(require("fs/promises"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const productModel_1 = __importDefault(require("../models/productModel"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const getAllProducts = async (req, res) => {
     try {
         const products = await productModel_1.default.find().sort({ createdAt: -1 });
@@ -31,8 +32,31 @@ const getAllProducts = async (req, res) => {
     }
 };
 exports.getAllProducts = getAllProducts;
-const getProductById = (req, res) => {
-    throw new Error("Function not implemented.");
+const getProductById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose_1.default.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: "Invalid ID" });
+        }
+        const product = await productModel_1.default.findById(id);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            data: product,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
 };
 exports.getProductById = getProductById;
 const createProduct = async (req, res) => {
