@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Order from "../models/orderModel";
 import User from "../models/userModel";
 import Product from "../models/productModel";
+import mongoose from "mongoose";
+import Review from "../models/reviewModel";
 
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
@@ -141,6 +143,147 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard stats",
+    });
+  }
+};
+
+// USERS (CUSTOMERS) ORDER CONTROLLERS
+export const getMyOrders = async (req: Request, res: Response) => {
+  try {
+    const clerkId = req.user?.clerkId;
+    if (!clerkId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+    const orders = await Order.find({ clerkId })
+      .populate("items.productId")
+      .sort({ createdAt: -1 });
+
+    if (orders.length === 0) {
+      return res.status(200).json({
+        success: false,
+        message: "No orders found for this user",
+        data: [],
+      });
+    }
+
+    // check if each order has been reviewed
+    const orderIds = orders.map((order) => order._id);
+    const reviews = await Review.find({ orderId: { $in: orderIds } });
+    const reviewOrderIds: Set<string> = new Set(
+      reviews.map((review) => review.orderId.toString())
+    );
+
+    const ordersWithReviewStatus = await Promise.all(
+      orders.map(async (order) => {
+        return {
+          ...order.toObject(),
+          hasReviewed: reviewOrderIds.has(order._id.toString()),
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: ordersWithReviewStatus,
+    });
+  } catch (error) {
+    console.error("Error fetching user orders", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user orders",
+    });
+  }
+};
+
+export const createOrder = async (req: Request, res: Response) => {
+  //start a transction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const user = req.user;
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { items, shippingAddress, paymentStatus, orderStatus, totalAmount } =
+      req.body;
+
+    if (!items || items.length === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        success: false,
+        message: "Order items are required",
+      });
+    }
+
+    // Validate products and stock
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(404)
+          .json({ success: false, message: `Product ${item.name} not found` });
+      }
+
+      if (product.stock < item.quantity) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${product.name}`,
+        });
+      }
+    }
+
+    const newOrder = new Order({
+      userId: user._id,
+      clerkId: user.clerkId,
+      items,
+      totalAmount,
+      shippingAddress,
+      paymentStatus: paymentStatus || "pending",
+      orderStatus: orderStatus || "pending",
+    });
+
+    // update product stock
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.stock -= item.quantity;
+        await product.save();
+      } else {
+        await session.abortTransaction();
+        session.endSession();
+      }
+    }
+
+    const savedOrder = await newOrder.save();
+
+    await session.commitTransaction();
+    session.endSession();
+    res.status(201).json({
+      success: true,
+      data: savedOrder,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error creating order", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create order",
     });
   }
 };

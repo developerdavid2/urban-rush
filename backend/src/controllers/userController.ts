@@ -16,6 +16,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: user,
+      message: "Current user fetched successfully",
     });
   } catch (error) {
     console.error("Error fetching current user:", error);
@@ -40,6 +41,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
       success: true,
       results: users.length,
       data: users,
+      message: "Users fetched successfully",
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -53,7 +55,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
 export const getUserById = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    if (!userId) {
+    if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({
         success: false,
         message: "User ID is required",
@@ -71,6 +73,7 @@ export const getUserById = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: user,
+      message: "User fetched successfully",
     });
   } catch (error) {
     console.error("Error fetching user by ID:", error);
@@ -120,6 +123,7 @@ export const addAddress = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       data: user,
+      message: "Address added successfully",
     });
   } catch (error) {
     console.error("Error adding address:", error);
@@ -142,6 +146,7 @@ export const getMyAddresses = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: user.addresses,
+      message: "Addresses fetched successfully",
     });
   } catch (error) {
     console.error("Error fetching addresses:", error);
@@ -167,7 +172,12 @@ export const updateAddress = async (req: Request, res: Response) => {
     } = req.body;
 
     const user = await User.findById(req.user!._id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ sucess: false, message: "User not found" });
+
+    if (!mongoose.isValidObjectId(addressId)) {
+      return res.status(400).json({ message: "Invalid address ID" });
+    }
 
     const address = user.addresses.find((a) => a._id!.toString() === addressId);
     if (!address) return res.status(404).json({ message: "Address not found" });
@@ -214,6 +224,10 @@ export const deleteAddress = async (req: Request, res: Response) => {
         success: false,
         message: "User not found",
       });
+    }
+
+    if (!mongoose.isValidObjectId(addressId)) {
+      return res.status(400).json({ message: "Invalid address ID" });
     }
 
     const address = user.addresses.find((a) => a._id!.toString() === addressId);
