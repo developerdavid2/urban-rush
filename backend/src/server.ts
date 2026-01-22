@@ -13,6 +13,7 @@ import { functions, inngest } from "./config/inngest";
 import productRouter from "./routes/product.route";
 import orderRouter from "./routes/order.route";
 import userRouter from "./routes/user.route";
+import reviewRouter from "./routes/review.route";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

@@ -35,16 +35,17 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authMiddleware = __importStar(require("../middleware/authMiddleware"));
-const orderController = __importStar(require("../controllers/orderController"));
+const reviewController = __importStar(require("../controllers/reviewController"));
 const router = (0, express_1.Router)();
+// ── Public (anyone can read reviews) ────────────────────────────────────────
+router.get("/products/:productId/reviews", reviewController.getReviewsByProduct);
+// ── Protected (auth required + ownership + delivered order check) ───────────
 router.use(authMiddleware.protect);
-router.get("/me", orderController.getMyOrders);
-router.post("/me/create", orderController.createOrder);
-// Admin-only routes
-router.use(authMiddleware.restrictTo("admin"));
-router.get("/dashboard/stats", orderController.getDashboardStats);
-router.get("/", orderController.getAllOrders);
-router.get("/:id", orderController.getOrderById);
-router.patch("/:id/status", orderController.updateOrderStatus);
+// Create review (only for delivered orders)
+router.post("/", reviewController.createReview);
+// Update own review
+router.patch("/:id", reviewController.updateReview);
+// Delete own review
+router.delete("/:id", reviewController.deleteReview);
 exports.default = router;
-//# sourceMappingURL=order.route.js.map
+//# sourceMappingURL=review.route.js.map

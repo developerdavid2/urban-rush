@@ -17,6 +17,7 @@ const inngest_1 = require("./config/inngest");
 const product_route_1 = __importDefault(require("./routes/product.route"));
 const order_route_1 = __importDefault(require("./routes/order.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
+const review_route_1 = __importDefault(require("./routes/review.route"));
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)({
@@ -34,6 +35,7 @@ app.use("/api/inngest", (0, express_3.serve)({ client: inngest_1.inngest, functi
 app.use("/api/v1/users", user_route_1.default);
 app.use("/api/v1/products", product_route_1.default);
 app.use("/api/v1/orders", order_route_1.default);
+app.use("/api/v1/reviews", review_route_1.default);
 app.get("/api/health", (req, res) => {
     res.status(200).json({
         status: "healthy",

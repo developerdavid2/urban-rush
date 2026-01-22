@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import fs from "fs/promises";
 import cloudinary from "../config/cloudinary";
 import Product from "../models/productModel";
+import mongoose from "mongoose";
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
@@ -28,8 +29,34 @@ export const getAllProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const getProductById = (req: Request, res: Response) => {
-  throw new Error("Function not implemented.");
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ success: false, message: "Invalid ID" });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 
 export const createProduct = async (req: Request, res: Response) => {
