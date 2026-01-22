@@ -176,7 +176,9 @@ export const updateAddress = async (req: Request, res: Response) => {
       return res.status(404).json({ sucess: false, message: "User not found" });
 
     if (!mongoose.isValidObjectId(addressId)) {
-      return res.status(400).json({ message: "Invalid address ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid address ID" });
     }
 
     const address = user.addresses.find((a) => a._id!.toString() === addressId);
@@ -232,7 +234,10 @@ export const deleteAddress = async (req: Request, res: Response) => {
 
     const address = user.addresses.find((a) => a._id!.toString() === addressId);
 
-    if (!address) return res.status(404).json({ message: "Address not found" });
+    if (!address)
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid address ID" });
 
     user.addresses = user.addresses.filter(
       (a) => a._id!.toString() !== addressId

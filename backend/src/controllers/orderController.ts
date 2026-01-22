@@ -226,9 +226,9 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // Validate products and stock
+    // Validate products, decrement stock, all within the session
     for (const item of items) {
-      const product = await Product.findById(item.product);
+      const product = await Product.findById(item.productId).session(session);
       if (!product) {
         await session.abortTransaction();
         session.endSession();
@@ -245,6 +245,9 @@ export const createOrder = async (req: Request, res: Response) => {
           message: `Insufficient stock for ${product.name}`,
         });
       }
+
+      product.stock -= item.quantity;
+      await product.save({ session });
     }
 
     const newOrder = new Order({
@@ -257,19 +260,7 @@ export const createOrder = async (req: Request, res: Response) => {
       orderStatus: orderStatus || "pending",
     });
 
-    // update product stock
-    for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        product.stock -= item.quantity;
-        await product.save();
-      } else {
-        await session.abortTransaction();
-        session.endSession();
-      }
-    }
-
-    const savedOrder = await newOrder.save();
+    const savedOrder = await newOrder.save({ session });
 
     await session.commitTransaction();
     session.endSession();
