@@ -50,10 +50,13 @@ const reviewSchema = new Schema<ReviewDocument, ReviewModel>(
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
 reviewSchema.statics.updateProductRatings = async function (
-  productId: Types.ObjectId
+  productId: Types.ObjectId | string
 ) {
+  const objectId =
+    typeof productId === "string" ? new Types.ObjectId(productId) : productId;
+
   const stats = await this.aggregate([
-    { $match: { productId } },
+    { $match: { productId: objectId } },
     {
       $group: {
         _id: "$productId",

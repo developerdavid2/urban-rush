@@ -36,7 +36,6 @@ export const getReviewsByProduct = async (req: Request, res: Response) => {
   }
 };
 
-// ── Create review (only for delivered orders)
 export const createReview = async (req: Request, res: Response) => {
   try {
     const { productId, review, rating, orderId } = req.body;
@@ -84,7 +83,7 @@ export const createReview = async (req: Request, res: Response) => {
     if (existingReview) {
       return res
         .status(400)
-        .json({ success: false, message: "You already reviewd this product" });
+        .json({ success: false, message: "You already reviewed this product" });
     }
 
     // Create review
@@ -110,12 +109,17 @@ export const createReview = async (req: Request, res: Response) => {
   }
 };
 
-// ── Update own review ───────────────────────────────────────────────────────
 export const updateReview = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { review, rating } = req.body;
     const userId = req.user!._id;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid review ID format" });
+    }
 
     const existingReview = await Review.findById(id);
 
@@ -137,11 +141,15 @@ export const updateReview = async (req: Request, res: Response) => {
         .json({ success: false, message: "Rating must be 1–5" });
     }
 
-    const updatedReview = await Review.findByIdAndUpdate(
-      id,
-      { review: review?.trim(), rating },
-      { new: true, runValidators: true }
-    );
+    // Build update object with only provided fields
+    const updateFields: { review?: string; rating?: number } = {};
+    if (review !== undefined) updateFields.review = review.trim();
+    if (rating !== undefined) updateFields.rating = rating;
+
+    const updatedReview = await Review.findByIdAndUpdate(id, updateFields, {
+      new: true,
+      runValidators: true,
+    });
 
     // Recalculate ratings (type-safe)
     await Review.updateProductRatings(existingReview.productId);
@@ -157,11 +165,16 @@ export const updateReview = async (req: Request, res: Response) => {
   }
 };
 
-// ── Delete own review ───────────────────────────────────────────────────────
 export const deleteReview = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!._id;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid review ID format" });
+    }
 
     const review = await Review.findById(id);
 
