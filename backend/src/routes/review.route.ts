@@ -4,7 +4,6 @@ import * as reviewController from "../controllers/reviewController";
 
 const router = Router();
 
-// ── Public (anyone can read reviews) ────────────────────────────────────────
 router.get(
   "/products/:productId/reviews",
   reviewController.getReviewsByProduct
