@@ -3,7 +3,6 @@ import Cart from "../models/cartModel";
 import Product from "../models/productModel";
 import mongoose from "mongoose";
 
-// ── Get current user's cart ──────────────────────────────────────────────────
 export const getCart = async (req: Request, res: Response) => {
   try {
     const userId = req.user!._id;
@@ -13,7 +12,6 @@ export const getCart = async (req: Request, res: Response) => {
       "name price images"
     );
 
-    // If no cart exists → return empty cart (don't create yet)
     if (!cart) {
       return res.status(200).json({
         success: true,
@@ -31,7 +29,6 @@ export const getCart = async (req: Request, res: Response) => {
   }
 };
 
-// ── Add item to cart (or increment quantity) ────────────────────────────────
 export const addToCart = async (req: Request, res: Response) => {
   try {
     const { productId, quantity = 1 } = req.body;
@@ -108,12 +105,17 @@ export const addToCart = async (req: Request, res: Response) => {
   }
 };
 
-// ── Update quantity of an item ──────────────────────────────────────────────
 export const updateCartItem = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
     const { quantity } = req.body;
     const userId = req.user!._id;
+
+    if (!mongoose.isValidObjectId(productId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid product ID" });
+    }
 
     if (!quantity || quantity < 1) {
       return res
@@ -148,7 +150,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
 
-    await cart.populate("items.productId", "name price imageCover");
+    await cart.populate("items.productId", "name price images");
 
     res.status(200).json({
       success: true,
@@ -161,7 +163,6 @@ export const updateCartItem = async (req: Request, res: Response) => {
   }
 };
 
-// ── Remove item from cart ───────────────────────────────────────────────────
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
@@ -185,7 +186,7 @@ export const removeFromCart = async (req: Request, res: Response) => {
         .json({ success: false, message: "Cart not found" });
     }
 
-    await cart.populate("items.productId", "name price imageCover");
+    await cart.populate("items.productId", "name price images");
 
     res.status(200).json({
       success: true,
@@ -198,7 +199,6 @@ export const removeFromCart = async (req: Request, res: Response) => {
   }
 };
 
-// ── Clear entire cart ───────────────────────────────────────────────────────
 export const clearCart = async (req: Request, res: Response) => {
   try {
     const userId = req.user!._id;
