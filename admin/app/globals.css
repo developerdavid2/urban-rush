@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
+@plugin '../hero.ts';
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+@config "../tailwind.config.ts";
+
+/* Force dark mode always */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base styles ────────────────────────────────────────────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-admin-bg text-text-primary font-sans;
+}
+
+/* ── Reusable utility classes (for IntelliSense) ────────────────────────────── */
+.bg-surface {
+  @apply bg-admin-surface;
+}
+.bg-divider {
+  @apply bg-admin-divider;
+}
+
+.text-secondary {
+  @apply text-text-secondary;
+}
+.text-muted {
+  @apply text-text-muted;
+}
+
+.border-divider {
+  @apply border-admin-divider;
+}
+
+.shadow-glow {
+  box-shadow: theme("boxShadow.glow");
+}
+.shadow-sm {
+  box-shadow: theme("boxShadow.sm");
+}
+
+/* ── Active state (exact match to your sidebar) ─────────────────────────────── */
+.active-emerald {
+  @apply bg-[rgba(16,185,129,0.12)] text-emerald-500 border border-emerald-500/20;
+}
+
+/* ── Hover state (exact match) ──────────────────────────────────────────────── */
+.hover-emerald {
+  @apply hover:bg-admin-surface hover:text-emerald-100 transition-colors duration-200;
+}
+
+/* Disabled state */
+.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+@layer base {
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    cursor: pointer;
+  }
 }
