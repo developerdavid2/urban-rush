@@ -33,7 +33,7 @@ export function DashboardStatsView({
         title="Total Revenue"
         value={formatCurrency(stats.revenue?.current)}
         icon={DollarSignIcon}
-        iconColor="text-emerald-500"
+        iconColor="text-white"
         trend={{
           ...calculateTrend(
             stats.revenue?.current,
@@ -50,7 +50,7 @@ export function DashboardStatsView({
         title="Total Orders"
         value={stats.orders?.current || 0}
         icon={ShoppingCartIcon}
-        iconColor="text-emerald-400"
+        iconColor="text-white"
         trend={{
           ...calculateTrend(
             stats.orders?.current,
@@ -67,7 +67,7 @@ export function DashboardStatsView({
         title="Total Customers"
         value={stats.customers?.current || 0}
         icon={UsersIcon}
-        iconColor="text-emerald-500"
+        iconColor="text-white"
         trend={{
           ...calculateTrend(
             stats.customers?.current,
@@ -84,7 +84,7 @@ export function DashboardStatsView({
         title="Total Products"
         value={stats.products?.current || 0}
         icon={PackageIcon}
-        iconColor="text-emerald-400"
+        iconColor="text-white"
         trend={{
           ...calculateTrend(
             stats.products?.current,
