@@ -10,7 +10,6 @@ export function DashboardStatsCardSkeleton() {
     >
       <Skeleton className="opacity-15">
         <CardBody className="p-6 space-y-4">
-          Header
           <div className="flex items-center gap-3">
             <Skeleton className="rounded-lg bg-stone-500/60 opacity-70">
               <div className="size-10 rounded-lg" />

@@ -10,13 +10,13 @@ export const productApi = {
     return data;
   },
 
-  createProduct: async () => {
-    const { data } = await axiosClient.post("/api/v1/products");
+  createProduct: async (payload: Record<string, unknown>) => {
+    const { data } = await axiosClient.post("/api/v1/products", payload);
     return data;
   },
 
-  updateProduct: async (id: string) => {
-    const { data } = await axiosClient.patch(`/api/v1/products/${id}`);
+  updateProduct: async (id: string, payload: Record<string, unknown>) => {
+    const { data } = await axiosClient.patch(`/api/v1/products/${id}`, payload);
 
     return data;
   },

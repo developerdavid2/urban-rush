@@ -5,7 +5,11 @@ import { DashboardStatsView } from "@/modules/dashboard/ui/views/dashboard-stats
 import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading } = useQuery({
+  const {
+    data: stats,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["dashboard"],
     queryFn: orderApi.getDashboardStats,
   });
@@ -25,8 +29,12 @@ export default function DashboardPage() {
 
       {isLoading ? (
         <DashboardStatsSkeletonView />
+      ) : isError || !stats ? (
+        <p className="text-sm text-text-secondary">
+          Failed to load dashboard stats.
+        </p>
       ) : (
-        <DashboardStatsView stats={stats.data} />
+        <DashboardStatsView stats={stats} />
       )}
 
       {/* Charts Section - Coming Next */}

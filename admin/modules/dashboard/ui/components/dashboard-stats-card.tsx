@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { useId } from "react";
 
 export type TrendType = "up" | "down" | "neutral";
 export type TrendSentiment = "positive" | "negative" | "neutral";
@@ -32,6 +33,7 @@ export function DashboardStatsCard({
   iconColor = "text-emerald-500",
   chartData = [],
 }: DashboardStatsCardProps) {
+  const gradientId = useId();
   const getTrendColor = (sentiment: TrendSentiment) => {
     switch (sentiment) {
       case "positive":
@@ -78,7 +80,9 @@ export function DashboardStatsCard({
                   iconColor
                 )}
               >
-                <Icon className="size-5 text-white" />
+                <div className="flex items-center justify-center size-10 rounded-lg bg-zinc-800">
+                  <Icon className={cn("size-5", iconColor)} />
+                </div>
               </div>
               <h3 className="text-sm font-medium text-text-secondary">
                 {title}
@@ -152,7 +156,7 @@ export function DashboardStatsCard({
                   >
                     <defs>
                       <linearGradient
-                        id={`gradient-${title}`}
+                        id={`gradient-${gradientId}`}
                         x1="0"
                         y1="0"
                         x2="0"

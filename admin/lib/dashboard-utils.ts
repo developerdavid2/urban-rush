@@ -1,4 +1,4 @@
-import {
+import type {
   TrendSentiment,
   TrendType,
 } from "@/modules/dashboard/ui/components/dashboard-stats-card";

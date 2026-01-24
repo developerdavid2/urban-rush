@@ -16,7 +16,7 @@ export const orderApi = {
   },
 
   updateOrderStatus: async (id: string) => {
-    const { data } = await axiosClient.patch(`/api/v1/orders/${id}/stauts`);
+    const { data } = await axiosClient.patch(`/api/v1/orders/${id}/status`);
     return data;
   },
 };

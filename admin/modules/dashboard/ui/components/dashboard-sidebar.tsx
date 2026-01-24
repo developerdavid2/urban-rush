@@ -58,8 +58,8 @@ export function AdminSidebar() {
               <div className="flex size-9 items-center p-1.5 justify-center rounded-xl bg-white shadow-lg shadow-emerald-glow overflow-hidden">
                 <Image
                   src="/logo.svg"
-                  width={9}
-                  height={9}
+                  width={36}
+                  height={36}
                   className="object-contain size-full"
                   alt="Logo"
                 />

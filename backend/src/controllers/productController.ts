@@ -274,13 +274,34 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ message: "Product ID is required" });
-
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Product ID" });
+    }
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Clean up Cloudinary images before deletion
+    if (product.images && product.images.length > 0) {
+      const publicIds = product.images.map((url: string) => {
+        const parts = url.split("/");
+        const filename = parts[parts.length - 1];
+        return `products/${filename.split(".")[0]}`;
+      });
+
+      await Promise.all(
+        publicIds.map((id: string) =>
+          cloudinary.uploader
+            .destroy(id)
+            .catch((err) =>
+              console.error(`Failed to delete from Cloudinary:`, err)
+            )
+        )
+      );
+    }
     await Product.findByIdAndDelete(id);
 
     res.status(200).json({
