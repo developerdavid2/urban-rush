@@ -31,65 +31,69 @@ export function DashboardStatsView({
       {/* Total Revenue */}
       <DashboardStatsCard
         title="Total Revenue"
-        value={formatCurrency(stats.revenue.current)}
+        value={formatCurrency(stats.revenue?.current)}
         icon={DollarSignIcon}
         iconColor="text-emerald-500"
         trend={{
           ...calculateTrend(
-            stats.revenue.current,
-            stats.revenue.previous,
+            stats.revenue?.current,
+            stats.revenue?.previous,
             true
           ),
           label: "vs last month",
         }}
-        chartData={generateChartData(stats.revenue.current, 0.15)}
+        chartData={generateChartData(stats.revenue?.current, 0.15)}
       />
 
       {/* Total Orders */}
       <DashboardStatsCard
         title="Total Orders"
-        value={stats.orders.current || 0}
+        value={stats.orders?.current || 0}
         icon={ShoppingCartIcon}
         iconColor="text-emerald-400"
         trend={{
-          ...calculateTrend(stats.orders.current, stats.orders.previous, true),
+          ...calculateTrend(
+            stats.orders?.current,
+            stats.orders?.previous,
+            true
+          ),
           label: "vs last month",
         }}
-        chartData={generateChartData(stats.orders.current, 0.3)}
+        chartData={generateChartData(stats.orders?.current, 0.3)}
       />
 
       {/* Total Customers */}
       <DashboardStatsCard
         title="Total Customers"
-        value={stats.customers.current || 0}
+        value={stats.customers?.current || 0}
         icon={UsersIcon}
         iconColor="text-emerald-500"
         trend={{
           ...calculateTrend(
-            stats.customers.current,
-            stats.customers.previous,
+            stats.customers?.current,
+            stats.customers?.previous,
             true
           ),
           label: "vs last month",
         }}
-        chartData={generateChartData(stats.customers.current, 0.25)}
+        chartData={generateChartData(stats.customers?.current, 0.25)}
       />
 
       {/* Total Products */}
       <DashboardStatsCard
         title="Total Products"
-        value={stats.products.current || 0}
+        value={stats.products?.current || 0}
         icon={PackageIcon}
         iconColor="text-emerald-400"
         trend={{
           ...calculateTrend(
-            stats.products.current,
-            stats.products.previous,
+            stats.products?.current,
+            stats.products?.previous,
             true
           ),
           label: "vs last month",
         }}
-        chartData={generateChartData(stats.products.current, 0.1)}
+        chartData={generateChartData(stats.products?.current, 0.1)}
       />
     </div>
   );
