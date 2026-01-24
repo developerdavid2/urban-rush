@@ -9,6 +9,7 @@ export default function DashboardPage() {
     data: stats,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["dashboard"],
     queryFn: orderApi.getDashboardStats,
@@ -27,14 +28,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <DashboardStatsSkeletonView />
-      ) : isError || !stats ? (
-        <p className="text-sm text-text-secondary">
-          Failed to load dashboard stats.
-        </p>
-      ) : (
-        <DashboardStatsView stats={stats} />
+      {/* Loading State */}
+      {isLoading && <DashboardStatsSkeletonView />}
+
+      {/* Success State */}
+      {!isLoading && !isError && stats?.data && (
+        <DashboardStatsView stats={stats.data} />
+      )}
+
+      {/* Error State */}
+      {!isLoading && isError && (
+        <div className="rounded-lg border border-danger/20 bg-danger/10 p-6">
+          <h3 className="text-lg font-semibold text-danger mb-2">
+            Failed to Load Dashboard Stats
+          </h3>
+          <p className="text-sm text-text-secondary">
+            {error instanceof Error
+              ? error.message
+              : "An error occurred while fetching dashboard data. Please try again."}
+          </p>
+        </div>
       )}
 
       {/* Charts Section - Coming Next */}

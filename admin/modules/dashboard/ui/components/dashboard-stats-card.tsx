@@ -30,7 +30,7 @@ export function DashboardStatsCard({
   value,
   icon: Icon,
   trend,
-  iconColor = "text-emerald-500",
+  iconColor = "text-white",
   chartData = [],
 }: DashboardStatsCardProps) {
   const gradientId = useId();
