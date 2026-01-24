@@ -1,53 +1,59 @@
-import {heroui} from '@heroui/theme';
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  darkMode: "class", // keeps dark mode always on (we'll force it in CSS)
+import { heroui } from "@heroui/theme";
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@heroui/theme/dist/components/(breadcrumbs|button|ripple|spinner).js"
+    "./node_modules/@heroui/theme/dist/components/(breadcrumbs|button|card|skeleton|ripple|spinner).js"
   ],
 
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
       colors: {
-        // ── Backgrounds & Surfaces (exact from your sidebar) ──
-        "admin-bg": "#0a0f0d", // main sidebar background
-        "admin-surface": "#14291c", // hover states, cards, panels
-        "admin-divider": "#1a2820", // borders, subtle lines
+        // ── Backgrounds & Surfaces (OKLCH) ──
+        "admin-bg": "oklch(0.12 0.02 155)", // #0a0f0d - deep forest dark
+        "admin-surface": "oklch(0.22 0.04 155)", // #14291c - elevated surface
+        "admin-divider": "oklch(0.28 0.03 155)", // #1a2820 - subtle borders
 
-        // ── Emerald Accent (your active/hover color) ──
+        // ── Emerald Accent (OKLCH) ──
         emerald: {
-          400: "#34d399", // hover text/icons
-          500: "#10b981", // active / default accent
-          600: "#059669", // pressed / deeper accent
-          glow: "rgba(16, 185, 129, 0.12)", // active background glow
+          400: "oklch(0.75 0.15 165)", // #34d399 - bright emerald hover
+          500: "oklch(0.68 0.17 165)", // #10b981 - primary emerald
+          600: "oklch(0.58 0.17 165)", // #059669 - deep emerald press
+          glow: "oklch(0.68 0.17 165 / 0.12)", // emerald with 12% opacity
         },
 
-        // ── Text ──
+        // ── Text (OKLCH) ──
         text: {
-          primary: "#f3f4f6", // main text, titles (gray-100)
-          secondary: "#9ca3af", // inactive icons, secondary text (gray-400)
-          muted: "#6b7280", // subtle labels (gray-500)
+          primary: "oklch(0.96 0.00 0)", // #f3f4f6 - white text
+          secondary: "oklch(0.68 0.01 270)", // #9ca3af - gray text
+          muted: "oklch(0.54 0.01 270)", // #6b7280 - subtle gray
         },
 
-        // ── Status colors (optional, but useful for future badges/alerts) ──
-        success: "#10b981",
-        warning: "#f59e0b",
-        danger: "#ef4444",
-        info: "#3b82f6",
+        // ── Status Colors (OKLCH) ──
+        success: "oklch(0.68 0.17 165)", // #10b981 - emerald success
+        warning: "oklch(0.68 0.17 65)", // #f59e0b - amber warning
+        danger: "oklch(0.63 0.26 25)", // #ef4444 - red danger
+        info: "oklch(0.60 0.21 255)", // #3b82f6 - blue info
       },
 
       borderColor: {
-        divider: "#1a2820",
+        divider: "oklch(0.28 0.03 155)", // #1a2820
       },
 
       boxShadow: {
-        glow: "0 4px 12px rgba(16, 185, 129, 0.15)",
-        sm: "0 1px 3px rgba(0, 0, 0, 0.1)",
+        glow: "0 4px 12px oklch(0.68 0.17 165 / 0.15)",
+        sm: "0 1px 3px oklch(0 0 0 / 0.1)",
       },
     },
   },
   plugins: [heroui()],
 };
+
+export default config;

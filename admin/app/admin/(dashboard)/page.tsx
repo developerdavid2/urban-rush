@@ -1,21 +1,37 @@
-// app/admin/(dashboard)/page.tsx
-export default function AdminDashboardPage() {
+"use client";
+import { orderApi } from "@/app/actions/orderApi";
+import { DashboardStatsSkeletonView } from "@/modules/dashboard/ui/components/dashboard-stats-loading";
+import { DashboardStatsView } from "@/modules/dashboard/ui/views/dashboard-stats-view";
+import { useQuery } from "@tanstack/react-query";
+
+export default function DashboardPage() {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: orderApi.getDashboardStats,
+  });
+
   return (
-    <div className="">
-      <h2 className="text-2xl font-bold mb-4">Welcome to Admin Dashboard</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-admin-surface p-6 rounded-lg shadow">
-          <h3 className="font-semibold">Total Users</h3>
-          <p className="text-3xl font-bold mt-2">1,234</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
+          <p className="text-sm text-text-secondary mt-1">
+            Welcome back! Here&apos;s what&apos;s happening with your store
+            today.
+          </p>
         </div>
-        <div className="bg-admin-surface p-6 rounded-lg shadow">
-          <h3 className="font-semibold">Orders</h3>
-          <p className="text-3xl font-bold mt-2">567</p>
-        </div>
-        <div className="bg-admin-surface p-6 rounded-lg shadow">
-          <h3 className="font-semibold">Revenue</h3>
-          <p className="text-3xl font-bold mt-2">$12,345</p>
-        </div>
+      </div>
+
+      {isLoading ? (
+        <DashboardStatsSkeletonView />
+      ) : (
+        <DashboardStatsView stats={stats.data} />
+      )}
+
+      {/* Charts Section - Coming Next */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Area chart will go here */}
       </div>
     </div>
   );

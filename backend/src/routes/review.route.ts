@@ -4,10 +4,7 @@ import * as reviewController from "../controllers/reviewController";
 
 const router = Router();
 
-router.get(
-  "/products/:productId/reviews",
-  reviewController.getReviewsByProduct
-);
+router.get("/products/:productId", reviewController.getReviewsByProduct);
 
 router.use(authMiddleware.protect);
 
