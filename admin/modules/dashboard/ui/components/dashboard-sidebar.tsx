@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "@heroui/tooltip";
+import Image from "next/image";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboardIcon },
@@ -40,10 +41,11 @@ export function AdminSidebar() {
       initial={false}
       animate={{ width: isCollapsed ? "4.5rem" : "15rem" }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="relative h-screen bg-admin-bg/80 border-r border-divider flex flex-col"
+      className="relative h-screen bg-admin-surface/5 border-r border-divider flex flex-col overflow-hidden"
     >
+      <div className="absolute top-1/3 left-0 -rotate-45 size-24 bg-gradient-to-tr from-white via-blue-300 to-transparent blur-[100px] sm:blur-[120px] opacity-35"></div>
       {/* Header */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between border-b border-divider h-18">
         <AnimatePresence mode="wait">
           {!isCollapsed && (
             <motion.div
@@ -51,13 +53,21 @@ export function AdminSidebar() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-2.5"
+              className="flex items-center gap-2.5 "
             >
-              <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-glow">
-                <LayoutDashboardIcon className="size-5 text-white" />
+              <div className="flex size-9 items-center p-1.5 justify-center rounded-xl bg-white shadow-lg shadow-emerald-glow overflow-hidden">
+                <Image
+                  src="/logo.svg"
+                  width={36}
+                  height={36}
+                  className="object-contain size-full"
+                  alt="Logo"
+                />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="font-semibold text-text-primary">Admin</span>
+                <span className="font-bold text-medium text-text-primary">
+                  URBAN RUSH
+                </span>
               </div>
             </motion.div>
           )}

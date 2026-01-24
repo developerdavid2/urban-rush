@@ -5,27 +5,18 @@
 
 @config "../tailwind.config.ts";
 
-/* Force dark mode always */
 :root {
   color-scheme: dark;
 }
 
-/* ── Base styles ────────────────────────────────────────────────────────────── */
 body {
-  @apply bg-admin-bg text-text-primary font-sans;
-}
-
-/* ── Reusable utility classes (for IntelliSense) ────────────────────────────── */
-.bg-surface {
-  @apply bg-admin-surface;
-}
-.bg-divider {
-  @apply bg-admin-divider;
+  @apply bg-admin-bg text-text-primary antialiased overflow-hidden;
 }
 
 .text-secondary {
   @apply text-text-secondary;
 }
+
 .text-muted {
   @apply text-text-muted;
 }
@@ -37,21 +28,19 @@ body {
 .shadow-glow {
   box-shadow: theme("boxShadow.glow");
 }
+
 .shadow-sm {
   box-shadow: theme("boxShadow.sm");
 }
 
-/* ── Active state (exact match to your sidebar) ─────────────────────────────── */
 .active-emerald {
   @apply bg-[rgba(16,185,129,0.12)] text-emerald-500 border border-emerald-500/20;
 }
 
-/* ── Hover state (exact match) ──────────────────────────────────────────────── */
 .hover-emerald {
   @apply hover:bg-admin-surface hover:text-emerald-100 transition-colors duration-200;
 }
 
-/* Disabled state */
 .disabled {
   @apply opacity-50 cursor-not-allowed;
 }

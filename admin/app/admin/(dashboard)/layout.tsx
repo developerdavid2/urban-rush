@@ -1,11 +1,11 @@
 "use client";
 
-import { AdminSidebar } from "../../../modules/dashboard/ui/components/dashboard-sidebar";
-import { BreadcrumbItem, Breadcrumbs } from "@heroui/breadcrumbs";
-import { usePathname } from "next/navigation";
-import { Button } from "@heroui/button";
-import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import { UserButton } from "@clerk/nextjs";
+import { BreadcrumbItem, Breadcrumbs } from "@heroui/breadcrumbs";
+import { Button } from "@heroui/button";
+import { usePathname } from "next/navigation";
+import { AdminSidebar } from "../../../modules/dashboard/ui/components/dashboard-sidebar";
 
 function generateBreadcrumbs(pathname: string) {
   const segments = pathname.split("/").filter(Boolean);
@@ -39,7 +39,7 @@ export default function AdminDashboardLayout({
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-admin-bg/10 border-b border-divider px-6 py-4 flex items-center justify-between">
+        <header className="bg-success/5 border-b border-divider px-6 h-18 flex items-center justify-between">
           <Breadcrumbs className="text-text-muted">
             {breadcrumbs.map((breadcrumb) => (
               <BreadcrumbItem
@@ -69,7 +69,7 @@ export default function AdminDashboardLayout({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-linear-to-tr from-zinc-900/30 via-50% to-admin-bg p-6 text-white">
+        <main className="flex-1 overflow-y-auto p-6 text-white bg-zinc-900/40">
           {children}
         </main>
       </div>
