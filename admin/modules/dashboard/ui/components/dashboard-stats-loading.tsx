@@ -42,7 +42,7 @@ export function DashboardStatsCardSkeleton() {
 export function DashboardStatsSkeletonView() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <DashboardStatsCardSkeleton key={i} />
       ))}
     </div>

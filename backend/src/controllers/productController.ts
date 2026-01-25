@@ -51,7 +51,7 @@ export const getProductById = async (req: Request, res: Response) => {
       data: product,
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error("Error fetching product:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -64,7 +64,6 @@ export const createProduct = async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
 
   try {
-    // 1. Validate required fields
     const {
       name,
       description,
@@ -90,7 +89,6 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
-    // 2. Validate images
     if (!files || files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -99,7 +97,6 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     if (files.length > 4) {
-      // Clean up uploaded files
       await Promise.all(
         files.map((file) => fs.unlink(file.path).catch(() => {}))
       );
@@ -109,7 +106,6 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
-    // 3. Upload images to Cloudinary
     const uploadPromises = files.map((file) =>
       cloudinary.uploader.upload(file.path, {
         folder: "products",
@@ -123,7 +119,6 @@ export const createProduct = async (req: Request, res: Response) => {
     const uploadResults = await Promise.all(uploadPromises);
     uploadedCloudinaryUrls = uploadResults.map((result) => result.secure_url);
 
-    // 4. Clean up local files after successful upload
     await Promise.all(
       files.map((file) =>
         fs.unlink(file.path).catch((err) => {
@@ -132,7 +127,6 @@ export const createProduct = async (req: Request, res: Response) => {
       )
     );
 
-    // 5. Create product (single operation - atomic by default!)
     const product = await Product.create({
       name,
       description,
@@ -150,7 +144,6 @@ export const createProduct = async (req: Request, res: Response) => {
       data: product,
     });
   } catch (error) {
-    // Clean up Cloudinary uploads if product creation failed
     if (uploadedCloudinaryUrls.length > 0) {
       const publicIds = uploadedCloudinaryUrls.map((url) => {
         const parts = url.split("/");
@@ -169,7 +162,6 @@ export const createProduct = async (req: Request, res: Response) => {
       );
     }
 
-    // Clean up local files
     if (files) {
       await Promise.all(
         files.map((file) => fs.unlink(file.path).catch(() => {}))
@@ -177,7 +169,6 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     console.error("Error creating product:", error);
-
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -187,6 +178,8 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
+  let uploadedCloudinaryUrls: string[] = [];
+
   try {
     const { id } = req.params;
     if (!id) return res.status(400).json({ message: "Product ID is required" });
@@ -199,6 +192,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       category,
       stock,
       priceDiscount,
+      removedImages,
     } = req.body;
 
     const product = await Product.findById(id);
@@ -206,7 +200,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Update fields if provided
+    // Update scalar fields
     if (name) product.name = name;
     if (description) product.description = description;
     if (summary) product.summary = summary;
@@ -215,13 +209,34 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (stock !== undefined) product.stock = parseInt(stock);
     if (priceDiscount) product.priceDiscount = parseFloat(priceDiscount);
 
-    //handle images if provided
+    // Handle images
+    let finalImages = [...(product.images || [])];
 
+    // Remove specified existing images
+    if (removedImages && removedImages.length > 0) {
+      const removed = Array.isArray(removedImages)
+        ? removedImages
+        : [removedImages];
+      finalImages = finalImages.filter((url) => !removed.includes(url));
+
+      // Optional: delete from Cloudinary
+      const publicIds = removed.map((url: string) => {
+        const parts = url.split("/");
+        const filename = parts[parts.length - 1];
+        return `products/${filename.split(".")[0]}`;
+      });
+
+      await Promise.all(
+        publicIds.map((pid) => cloudinary.uploader.destroy(pid).catch(() => {}))
+      );
+    }
+
+    // Add new images if uploaded
     if (files && files.length > 0) {
       if (files.length > 4) {
         return res.status(400).json({ message: "Maximum of 4 images allowed" });
       }
-      // Upload new images to Cloudinary
+
       const uploadPromises = files.map((file) =>
         cloudinary.uploader.upload(file.path, {
           folder: "products",
@@ -231,13 +246,12 @@ export const updateProduct = async (req: Request, res: Response) => {
           ],
         })
       );
-      const uploadResults = await Promise.all(uploadPromises);
-      const uploadedCloudinaryUrls = uploadResults.map(
-        (result) => result.secure_url
-      );
-      product.images = uploadedCloudinaryUrls;
 
-      // Clean up local files after successful upload
+      const uploadResults = await Promise.all(uploadPromises);
+      uploadedCloudinaryUrls = uploadResults.map((result) => result.secure_url);
+
+      finalImages = [...finalImages, ...uploadedCloudinaryUrls];
+
       await Promise.all(
         files.map((file) =>
           fs.unlink(file.path).catch((err) => {
@@ -246,6 +260,16 @@ export const updateProduct = async (req: Request, res: Response) => {
         )
       );
     }
+
+    // Final validation
+    if (finalImages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Product must have at least one image",
+      });
+    }
+
+    product.images = finalImages;
     await product.save();
 
     res.status(200).json({
@@ -254,9 +278,23 @@ export const updateProduct = async (req: Request, res: Response) => {
       data: product,
     });
   } catch (error) {
-    console.error("Error updating product:", error);
+    if (uploadedCloudinaryUrls.length > 0) {
+      const publicIds = uploadedCloudinaryUrls.map((url) => {
+        const parts = url.split("/");
+        const filename = parts[parts.length - 1];
+        return `products/${filename.split(".")[0]}`;
+      });
 
-    // Clean up local files in case of error
+      await Promise.all(
+        publicIds.map((id) =>
+          cloudinary.uploader
+            .destroy(id)
+            .catch((err) =>
+              console.error(`Failed to delete from Cloudinary:`, err)
+            )
+        )
+      );
+    }
 
     if (files) {
       await Promise.all(
@@ -264,6 +302,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       );
     }
 
+    console.error("Error updating product:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -284,7 +323,6 @@ export const deleteProduct = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Clean up Cloudinary images before deletion
     if (product.images && product.images.length > 0) {
       const publicIds = product.images.map((url: string) => {
         const parts = url.split("/");

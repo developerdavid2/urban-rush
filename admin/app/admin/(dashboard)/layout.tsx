@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import { BreadcrumbItem, Breadcrumbs } from "@heroui/breadcrumbs";
-import { Button } from "@heroui/button";
 import { usePathname } from "next/navigation";
 import { AdminSidebar } from "../../../modules/dashboard/ui/components/dashboard-sidebar";
 
@@ -61,9 +60,6 @@ export default function AdminDashboardLayout({
           </Breadcrumbs>
 
           <div className="flex items-center gap-4">
-            <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors">
-              Add Product
-            </Button>
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
