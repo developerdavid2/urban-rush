@@ -7,7 +7,7 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@heroui/theme/dist/components/(breadcrumbs|button|card|skeleton|ripple|spinner).js"
+    "./node_modules/@heroui/theme/dist/components/(breadcrumbs|button|card|modal|skeleton|ripple|spinner).js"
   ],
 
   theme: {

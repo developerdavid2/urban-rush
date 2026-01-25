@@ -1,16 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // async rewrites() {
-  //   return {
-  //     fallback: [
-  //       {
-  //         source: "/api/:path*",
-  //         destination: "https://urban-rush.onrender.com/:path*",
-  //         basePath: false,
-  //       },
-  //     ],
-  //   };
-  // },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

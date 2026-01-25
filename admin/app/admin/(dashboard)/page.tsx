@@ -18,7 +18,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-sm text-text-secondary mt-1">
@@ -26,7 +26,7 @@ export default function DashboardPage() {
             today.
           </p>
         </div>
-      </div>
+      </header>
 
       {/* Loading State */}
       {isLoading && <DashboardStatsSkeletonView />}
