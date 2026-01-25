@@ -137,7 +137,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
   return (
     <ModalContent>
-      {(onClose) => (
+      {(modalOnClose) => (
         <form onSubmit={handleSubmit(onSubmit)}>
           <ModalHeader className="flex flex-col gap-1">
             {isEditMode ? "Edit Product" : "Add New Product"}
@@ -394,7 +394,10 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
           <ModalFooter>
             <Button
               variant="flat"
-              onPress={onClose}
+              onPress={() => {
+                modalOnClose();
+                onClose();
+              }}
               isDisabled={isSubmitting}
               className="bg-zinc-300 text-admin-bg"
             >

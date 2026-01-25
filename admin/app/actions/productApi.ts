@@ -11,23 +11,14 @@ export const productApi = {
   },
 
   createProduct: async (formData: FormData) => {
-    const { data } = await axiosClient.post("/api/v1/products", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const { data } = await axiosClient.post("/api/v1/products", formData);
     return data;
   },
 
   updateProduct: async (id: string, formData: FormData) => {
     const { data } = await axiosClient.patch(
       `/api/v1/products/${id}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      formData
     );
     return data;
   },

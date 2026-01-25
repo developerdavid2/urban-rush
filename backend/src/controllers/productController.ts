@@ -213,11 +213,15 @@ export const updateProduct = async (req: Request, res: Response) => {
     let finalImages = [...(product.images || [])];
 
     // Remove specified existing images
+    let removedFromProduct: string[] = [];
     if (removedImages && removedImages.length > 0) {
       const removed = Array.isArray(removedImages)
         ? removedImages
         : [removedImages];
-      finalImages = finalImages.filter((url) => !removed.includes(url));
+      removedFromProduct = finalImages.filter((url) => removed.includes(url));
+      finalImages = finalImages.filter(
+        (url) => !removedFromProduct.includes(url)
+      );
 
       // Optional: delete from Cloudinary
       const publicIds = removed.map((url: string) => {
@@ -271,6 +275,17 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     product.images = finalImages;
     await product.save();
+    if (removedFromProduct.length > 0) {
+      const publicIds = removedFromProduct.map((url: string) => {
+        const parts = url.split("/");
+        const filename = parts[parts.length - 1];
+        return `products/${filename.split(".")[0]}`;
+      });
+
+      await Promise.all(
+        publicIds.map((pid) => cloudinary.uploader.destroy(pid).catch(() => {}))
+      );
+    }
 
     res.status(200).json({
       success: true,
