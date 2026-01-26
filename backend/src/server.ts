@@ -41,7 +41,7 @@ app.use(
 );
 
 app.use(express.json());
-app.use(clerkMiddleware()); // req.auth will be available
+// app.use(clerkMiddleware()); // req.auth will be available
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
@@ -51,7 +51,7 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 
 // ROUTES
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/products", productRouter);
+app.use("/api/v1/products", clerkMiddleware(), productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use("/api/v1/cart", cartRouter);
