@@ -16,6 +16,7 @@ router.use(authMiddleware.protect, authMiddleware.restrictTo("admin"));
 router.post("/", upload.array("images", 4), productController.createProduct);
 router.patch(
   "/:id",
+  upload.array("images", 4),
   productController.updateProduct
 );
 router.delete("/:id", productController.deleteProduct);
