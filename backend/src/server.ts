@@ -21,13 +21,27 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ENV.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      // Normalize: remove trailing slash from both sides
+      const cleanOrigin = origin.replace(/\/$/, "");
+      const allowed = (ENV.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+
+      if (cleanOrigin === allowed || cleanOrigin === "http://localhost:3000") {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use(express.json());
-app.use(clerkMiddleware()); // req.auth will be available
+// app.use(clerkMiddleware()); // req.auth will be available
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
@@ -37,7 +51,7 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 
 // ROUTES
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/products", productRouter);
+app.use("/api/v1/products", clerkMiddleware(), productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use("/api/v1/cart", cartRouter);
