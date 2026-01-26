@@ -44,11 +44,27 @@ app.use(
 );
 
 app.use(express.json());
-app.use(clerkMiddleware()); // req.auth will be available
+app.use(
+  clerkMiddleware({
+    publishableKey: ENV.CLERK_PUBLISHABLE_KEY,
+    secretKey: ENV.CLERK_SECRET_KEY,
+  })
+); // req.auth will be available
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+
+app.use((req, res, next) => {
+  console.log("🔍 Incoming Request:", {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+    hasAuthHeader: !!req.headers.authorization,
+    authHeader: req.headers.authorization?.substring(0, 30) + "...",
+  });
+  next();
+});
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
