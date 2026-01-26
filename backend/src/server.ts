@@ -21,8 +21,22 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ENV.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      // Normalize: remove trailing slash from both sides
+      const cleanOrigin = origin.replace(/\/$/, "");
+      const allowed = (ENV.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+
+      if (cleanOrigin === allowed || cleanOrigin === "http://localhost:3000") {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
