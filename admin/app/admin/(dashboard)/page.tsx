@@ -1,14 +1,10 @@
-// app/dashboard/page.tsx
 "use client";
-
+import { orderApi } from "@/app/actions/orderApi";
 import { DashboardStatsSkeletonView } from "@/modules/dashboard/ui/components/dashboard-stats-loading";
 import { DashboardStatsView } from "@/modules/dashboard/ui/views/dashboard-stats-view";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
 
 export default function DashboardPage() {
-  const { getToken } = useAuth();
-
   const {
     data: stats,
     isLoading,
@@ -16,39 +12,7 @@ export default function DashboardPage() {
     error,
   } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: async () => {
-      // Get Clerk token
-      const token = await getToken();
-
-      console.log("🔑 Token exists:", !!token);
-      console.log("🔑 Token preview:", token?.substring(0, 30) + "...");
-
-      // Hardcoded fetch
-      const response = await fetch(
-        "https://urban-rush.onrender.com/api/v1/orders/dashboard/stats",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          credentials: "include",
-        }
-      );
-
-      console.log("📊 Response status:", response.status);
-      console.log("📊 Response OK:", response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Error response:", errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("✅ Success data:", data);
-      return data;
-    },
+    queryFn: orderApi.getDashboardStats,
   });
 
   return (
@@ -85,6 +49,11 @@ export default function DashboardPage() {
           </p>
         </div>
       )}
+
+      {/* Charts Section - Coming Next */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Area chart will go here */}
+      </div>
     </div>
   );
 }

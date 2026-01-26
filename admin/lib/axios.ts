@@ -1,12 +1,51 @@
+// lib/axios.ts
 import axios from "axios";
 
-// For client-side usage (React Query, client components)
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
 export const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_API_URL,
+  baseURL: BACKEND_URL,
   withCredentials: true,
 });
 
-// For server-side usage (Server Components, Server Actions)
-export const axiosServer = axios.create({
-  baseURL: process.env.BACKEND_API_URL,
-});
+// Add Clerk token to every request
+axiosClient.interceptors.request.use(
+  async (config) => {
+    // Get token from Clerk (client-side only)
+    if (typeof window !== "undefined" && window.Clerk) {
+      try {
+        const token = await window.Clerk.session?.getToken();
+
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log("✅ Axios: Added Clerk token");
+        } else {
+          console.warn("⚠️ Axios: No Clerk token available");
+        }
+      } catch (error) {
+        console.error("❌ Axios: Failed to get token:", error);
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response logging
+axiosClient.interceptors.response.use(
+  (response) => {
+    console.log("✅ Axios Response:", response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error("❌ Axios Error:", {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
