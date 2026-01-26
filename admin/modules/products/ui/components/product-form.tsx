@@ -181,13 +181,17 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    {...field}
                     label="Category"
                     placeholder="Select category"
                     variant="bordered"
                     isInvalid={!!errors.category}
                     errorMessage={errors.category?.message}
                     isDisabled={isSubmitting}
+                    selectedKeys={field.value ? [field.value] : []} // ← key fix: controlled selection
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string; // single select
+                      field.onChange(value);
+                    }}
                     classNames={{
                       label:
                         "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",

@@ -18,7 +18,6 @@ axiosClient.interceptors.request.use(
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log("✅ Axios: Added Clerk token");
         } else {
           console.warn("⚠️ Axios: No Clerk token available");
         }
@@ -37,7 +36,6 @@ axiosClient.interceptors.request.use(
 // Add response logging
 axiosClient.interceptors.response.use(
   (response) => {
-    console.log("✅ Axios Response:", response.status, response.config.url);
     return response;
   },
   (error) => {
