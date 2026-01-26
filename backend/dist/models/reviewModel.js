@@ -44,8 +44,9 @@ const reviewSchema = new mongoose_1.Schema({
 });
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 reviewSchema.statics.updateProductRatings = async function (productId) {
+    const objectId = typeof productId === "string" ? new mongoose_1.Types.ObjectId(productId) : productId;
     const stats = await this.aggregate([
-        { $match: { productId } },
+        { $match: { productId: objectId } },
         {
             $group: {
                 _id: "$productId",

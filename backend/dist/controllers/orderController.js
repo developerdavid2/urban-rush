@@ -124,10 +124,22 @@ const getDashboardStats = async (req, res) => {
         res.status(200).json({
             success: true,
             data: {
-                totalOrders,
-                totalRevenue,
-                totalCustomers,
-                totalProducts,
+                orders: {
+                    current: totalOrders,
+                    previous: 0,
+                },
+                revenue: {
+                    current: totalRevenue,
+                    previous: 0,
+                },
+                customers: {
+                    current: totalCustomers,
+                    previous: 0,
+                },
+                products: {
+                    current: totalProducts,
+                    previous: 0,
+                },
             },
         });
     }

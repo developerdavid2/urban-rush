@@ -1,3 +1,4 @@
+// types/product.ts
 export type Product = {
   _id: string;
   name: string;
@@ -5,7 +6,10 @@ export type Product = {
   price: number;
   priceDiscount?: number;
   stock: number;
+  status?: string;
   summary: string;
   description: string;
   images: string[];
 };
+
+export type ProductKey = keyof Product;

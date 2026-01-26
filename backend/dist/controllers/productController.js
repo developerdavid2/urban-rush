@@ -51,7 +51,7 @@ const getProductById = async (req, res) => {
         });
     }
     catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching product:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",
@@ -63,7 +63,6 @@ const createProduct = async (req, res) => {
     let uploadedCloudinaryUrls = [];
     const files = req.files;
     try {
-        // 1. Validate required fields
         const { name, description, summary, price, category, stock, priceDiscount, } = req.body;
         if (!name ||
             !description ||
@@ -76,7 +75,6 @@ const createProduct = async (req, res) => {
                 message: "Missing required fields: name, description, summary, price, category, stock",
             });
         }
-        // 2. Validate images
         if (!files || files.length === 0) {
             return res.status(400).json({
                 success: false,
@@ -84,14 +82,12 @@ const createProduct = async (req, res) => {
             });
         }
         if (files.length > 4) {
-            // Clean up uploaded files
             await Promise.all(files.map((file) => promises_1.default.unlink(file.path).catch(() => { })));
             return res.status(400).json({
                 success: false,
                 message: "Maximum of 4 images allowed",
             });
         }
-        // 3. Upload images to Cloudinary
         const uploadPromises = files.map((file) => cloudinary_1.default.uploader.upload(file.path, {
             folder: "products",
             transformation: [
@@ -101,11 +97,9 @@ const createProduct = async (req, res) => {
         }));
         const uploadResults = await Promise.all(uploadPromises);
         uploadedCloudinaryUrls = uploadResults.map((result) => result.secure_url);
-        // 4. Clean up local files after successful upload
         await Promise.all(files.map((file) => promises_1.default.unlink(file.path).catch((err) => {
             console.error(`Failed to delete file ${file.path}:`, err);
         })));
-        // 5. Create product (single operation - atomic by default!)
         const product = await productModel_1.default.create({
             name,
             description,
@@ -123,7 +117,6 @@ const createProduct = async (req, res) => {
         });
     }
     catch (error) {
-        // Clean up Cloudinary uploads if product creation failed
         if (uploadedCloudinaryUrls.length > 0) {
             const publicIds = uploadedCloudinaryUrls.map((url) => {
                 const parts = url.split("/");
@@ -134,7 +127,6 @@ const createProduct = async (req, res) => {
                 .destroy(id)
                 .catch((err) => console.error(`Failed to delete from Cloudinary:`, err))));
         }
-        // Clean up local files
         if (files) {
             await Promise.all(files.map((file) => promises_1.default.unlink(file.path).catch(() => { })));
         }
@@ -148,16 +140,17 @@ const createProduct = async (req, res) => {
 exports.createProduct = createProduct;
 const updateProduct = async (req, res) => {
     const files = req.files;
+    let uploadedCloudinaryUrls = [];
     try {
         const { id } = req.params;
         if (!id)
             return res.status(400).json({ message: "Product ID is required" });
-        const { name, description, summary, price, category, stock, priceDiscount, } = req.body;
+        const { name, description, summary, price, category, stock, priceDiscount, removedImages, } = req.body;
         const product = await productModel_1.default.findById(id);
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
         }
-        // Update fields if provided
+        // Update scalar fields
         if (name)
             product.name = name;
         if (description)
@@ -172,12 +165,29 @@ const updateProduct = async (req, res) => {
             product.stock = parseInt(stock);
         if (priceDiscount)
             product.priceDiscount = parseFloat(priceDiscount);
-        //handle images if provided
+        // Handle images
+        let finalImages = [...(product.images || [])];
+        // Remove specified existing images
+        let removedFromProduct = [];
+        if (removedImages && removedImages.length > 0) {
+            const removed = Array.isArray(removedImages)
+                ? removedImages
+                : [removedImages];
+            removedFromProduct = finalImages.filter((url) => removed.includes(url));
+            finalImages = finalImages.filter((url) => !removedFromProduct.includes(url));
+            // Optional: delete from Cloudinary
+            const publicIds = removed.map((url) => {
+                const parts = url.split("/");
+                const filename = parts[parts.length - 1];
+                return `products/${filename.split(".")[0]}`;
+            });
+            await Promise.all(publicIds.map((pid) => cloudinary_1.default.uploader.destroy(pid).catch(() => { })));
+        }
+        // Add new images if uploaded
         if (files && files.length > 0) {
             if (files.length > 4) {
                 return res.status(400).json({ message: "Maximum of 4 images allowed" });
             }
-            // Upload new images to Cloudinary
             const uploadPromises = files.map((file) => cloudinary_1.default.uploader.upload(file.path, {
                 folder: "products",
                 transformation: [
@@ -186,14 +196,29 @@ const updateProduct = async (req, res) => {
                 ],
             }));
             const uploadResults = await Promise.all(uploadPromises);
-            const uploadedCloudinaryUrls = uploadResults.map((result) => result.secure_url);
-            product.images = uploadedCloudinaryUrls;
-            // Clean up local files after successful upload
+            uploadedCloudinaryUrls = uploadResults.map((result) => result.secure_url);
+            finalImages = [...finalImages, ...uploadedCloudinaryUrls];
             await Promise.all(files.map((file) => promises_1.default.unlink(file.path).catch((err) => {
                 console.error(`Failed to delete file ${file.path}:`, err);
             })));
         }
+        // Final validation
+        if (finalImages.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Product must have at least one image",
+            });
+        }
+        product.images = finalImages;
         await product.save();
+        if (removedFromProduct.length > 0) {
+            const publicIds = removedFromProduct.map((url) => {
+                const parts = url.split("/");
+                const filename = parts[parts.length - 1];
+                return `products/${filename.split(".")[0]}`;
+            });
+            await Promise.all(publicIds.map((pid) => cloudinary_1.default.uploader.destroy(pid).catch(() => { })));
+        }
         res.status(200).json({
             success: true,
             message: "Product updated successfully",
@@ -201,11 +226,20 @@ const updateProduct = async (req, res) => {
         });
     }
     catch (error) {
-        console.error("Error updating product:", error);
-        // Clean up local files in case of error
+        if (uploadedCloudinaryUrls.length > 0) {
+            const publicIds = uploadedCloudinaryUrls.map((url) => {
+                const parts = url.split("/");
+                const filename = parts[parts.length - 1];
+                return `products/${filename.split(".")[0]}`;
+            });
+            await Promise.all(publicIds.map((id) => cloudinary_1.default.uploader
+                .destroy(id)
+                .catch((err) => console.error(`Failed to delete from Cloudinary:`, err))));
+        }
         if (files) {
             await Promise.all(files.map((file) => promises_1.default.unlink(file.path).catch(() => { })));
         }
+        console.error("Error updating product:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",
@@ -213,6 +247,39 @@ const updateProduct = async (req, res) => {
     }
 };
 exports.updateProduct = updateProduct;
-const deleteProduct = async (req, res) => { };
+const deleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose_1.default.isValidObjectId(id)) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid Product ID" });
+        }
+        const product = await productModel_1.default.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+        if (product.images && product.images.length > 0) {
+            const publicIds = product.images.map((url) => {
+                const parts = url.split("/");
+                const filename = parts[parts.length - 1];
+                return `products/${filename.split(".")[0]}`;
+            });
+            await Promise.all(publicIds.map((id) => cloudinary_1.default.uploader
+                .destroy(id)
+                .catch((err) => console.error(`Failed to delete from Cloudinary:`, err))));
+        }
+        await productModel_1.default.findByIdAndDelete(id);
+        res.status(200).json({
+            success: true,
+            message: "Product deleted",
+            data: null,
+        });
+    }
+    catch (error) {
+        console.error("Error deleting product", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
 exports.deleteProduct = deleteProduct;
 //# sourceMappingURL=productController.js.map

@@ -1,12 +1,31 @@
+// app/products/page.tsx
 "use client";
 
-import { productApi } from "@/app/actions/productApi";
+import React, { useCallback, useMemo, useState } from "react";
 import { ProductForm } from "@/modules/products/ui/components/product-form";
-import type { Product } from "@/types/product";
-import { Button, Modal, useDisclosure } from "@heroui/react";
+import {
+  getStockStatus,
+  getStockStatusConfig,
+  StockStatus,
+} from "@/lib/dashboard-utils";
+import { Button, Modal, useDisclosure, Chip } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { PlusIcon, PencilIcon, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { productApi } from "@/app/actions/productApi";
+import { Loader2, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import Image from "next/image";
+import { toast } from "react-hot-toast";
+import { Product } from "@/types/product";
+import { TableView, Column } from "@/modules/components/table-view";
+
+const columns: Column[] = [
+  { name: "IMAGE", uid: "images" },
+  { name: "NAME", uid: "name", sortable: true },
+  { name: "CATEGORY", uid: "category", sortable: true },
+  { name: "PRICE", uid: "price", sortable: true },
+  { name: "STOCK", uid: "stock", sortable: true },
+  { name: "STATUS", uid: "status", sortable: true },
+  { name: "ACTIONS", uid: "actions" },
+];
 
 export default function ProductsPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -15,14 +34,114 @@ export default function ProductsPage() {
     undefined
   );
 
-  const { data: products, isLoading } = useQuery({
+  const { data: productsResponse, isLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: async () => {
-      return productApi.getAllProducts();
-    },
+    queryFn: productApi.getAllProducts,
   });
 
-  const prd1 = products?.data?.[0]; // first product for edit demo
+  const products = productsResponse?.data;
+
+  const enhancedProducts = useMemo(() => {
+    if (!products) return;
+    return products.map((p: Product) => ({
+      ...p,
+      status: getStockStatus(p.stock),
+    }));
+  }, [products]);
+
+  const renderCell = useCallback(
+    (product: Product, columnKey: React.Key) => {
+      const key = columnKey as keyof Product;
+      const cellValue = product[key];
+
+      switch (columnKey) {
+        case "images":
+          const firstImage = Array.isArray(cellValue) && cellValue[0];
+          return firstImage ? (
+            <div className="relative size-18 rounded-md overflow-hidden bg-zinc-800">
+              <Image
+                src={firstImage}
+                alt={product.name || "Product"}
+                fill
+                className="object-cover"
+                quality={90}
+              />
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-zinc-800 rounded-md flex items-center justify-center text-zinc-500 text-xs">
+              No Img
+            </div>
+          );
+
+        case "name":
+          return <p className="font-medium text-small">{String(cellValue)}</p>;
+
+        case "category":
+          return <p className="text-small capitalize">{String(cellValue)}</p>;
+
+        case "price":
+          return (
+            <p className="text-small font-medium">
+              ${Number(cellValue).toFixed(2)}
+            </p>
+          );
+
+        case "stock":
+          return <p className="text-small">{String(cellValue)}</p>;
+
+        case "status":
+          const config = getStockStatusConfig(cellValue as StockStatus);
+          return (
+            <Chip
+              classNames={{
+                base: `capitalize border ${config.borderClass} ${config.bgClass}`,
+                content: config.textClass,
+              }}
+              size="sm"
+              variant="flat"
+            >
+              {config.label}
+            </Chip>
+          );
+
+        case "actions":
+          return (
+            <div className="relative flex items-center gap-2">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => {
+                  setModalMode("edit");
+                  setSelectedProduct(product);
+                  onOpen();
+                }}
+              >
+                <PencilIcon className="size-4 text-emerald-100" />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => {
+                  if (confirm("Delete this product?")) {
+                    toast.success("Product deleted (placeholder)");
+                  }
+                }}
+              >
+                <Trash2Icon className="size-4 text-red-400/70" />
+              </Button>
+            </div>
+          );
+
+        default:
+          return typeof cellValue === "object"
+            ? JSON.stringify(cellValue)
+            : String(cellValue);
+      }
+    },
+    [onOpen]
+  );
 
   const openCreateModal = () => {
     setModalMode("create");
@@ -30,16 +149,8 @@ export default function ProductsPage() {
     onOpen();
   };
 
-  const openEditModal = () => {
-    if (!prd1) return;
-    setModalMode("edit");
-    setSelectedProduct(prd1);
-    onOpen();
-  };
-
   return (
     <div className="space-y-6 p-6">
-      {/* Page Header */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Products</h1>
@@ -48,64 +159,41 @@ export default function ProductsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            startContent={<PlusIcon className="size-4" />}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
-            onPress={openCreateModal}
-            isDisabled={isLoading}
-          >
-            Add New Product
-          </Button>
-
-          <Button
-            startContent={
-              isLoading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <PencilIcon className="size-4" />
-              )
-            }
-            variant="bordered"
-            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800/50 px-5 py-2.5 rounded-lg font-medium transition-all"
-            onPress={openEditModal}
-            isDisabled={isLoading || !prd1}
-          >
-            Edit First Product
-          </Button>
-        </div>
+        <Button
+          startContent={<PlusIcon className="size-4" />}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow-md"
+          onPress={openCreateModal}
+          isDisabled={isLoading}
+        >
+          Add New Product
+        </Button>
       </header>
 
-      {/* Loading / Empty State */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-16 text-text-secondary">
           <Loader2 className="size-10 animate-spin mb-4" />
           <p>Loading products...</p>
         </div>
-      ) : !products?.data?.length ? (
+      ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-text-secondary border border-dashed border-admin-divider rounded-xl">
           <p className="text-lg font-medium mb-2">No products yet</p>
           <p className="text-sm">
-            Click &quot;Add New Product&quot; to get started
+            Click &ldquo;Add New Product&rdquo; to get started
           </p>
         </div>
       ) : (
-        <div className="bg-zinc-900/40 border border-admin-divider rounded-xl p-6">
-          <p className="text-sm text-text-secondary">
-            Showing {products.data.length} product(s) — demo focused on first
-            item
-          </p>
-          {/* Here you would normally render a table/list of products */}
-          <div className="mt-4 p-4 bg-zinc-950/50 rounded-lg border border-admin-divider/50">
-            <p className="font-medium">First product (for edit demo):</p>
-            <pre className="text-xs mt-2 text-emerald-300/90 overflow-auto">
-              {JSON.stringify(prd1, null, 2)}
-            </pre>
-          </div>
-        </div>
+        <TableView<Product>
+          items={enhancedProducts}
+          columns={columns}
+          renderCell={renderCell}
+          getItemKey={(product) => product._id}
+          isLoading={isLoading}
+          emptyMessage="No products found"
+          searchPlaceholder="Search by name or category..."
+          searchKeys={["name", "category"]} // Search through these fields
+        />
       )}
 
-      {/* Modal - shared for create & edit */}
       <Modal
         size="5xl"
         isOpen={isOpen}

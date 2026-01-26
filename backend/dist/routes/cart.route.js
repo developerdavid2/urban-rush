@@ -35,12 +35,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authMiddleware = __importStar(require("../middleware/authMiddleware"));
-const reviewController = __importStar(require("../controllers/reviewController"));
+const cartController = __importStar(require("../controllers/cartController"));
 const router = (0, express_1.Router)();
-router.get("/products/:productId", reviewController.getReviewsByProduct);
+// All cart routes require authentication
 router.use(authMiddleware.protect);
-router.post("/", reviewController.createReview);
-router.patch("/:id", reviewController.updateReview);
-router.delete("/:id", reviewController.deleteReview);
+router.get("/", cartController.getCart);
+router.post("/items", cartController.addToCart);
+router.patch("/items/:productId", cartController.updateCartItem);
+router.delete("/items/:productId", cartController.removeFromCart);
+router.delete("/", cartController.clearCart);
 exports.default = router;
-//# sourceMappingURL=review.route.js.map
+//# sourceMappingURL=cart.route.js.map

@@ -168,7 +168,7 @@ export function getStockStatusConfig(status: StockStatus): StockStatusConfig {
     "out-of-stock": {
       label: "Out of Stock",
       bgClass: "bg-danger/10",
-      textClass: "text-danger",
+      textClass: "text-red-400/70",
       borderClass: "border-danger/20",
     },
   };

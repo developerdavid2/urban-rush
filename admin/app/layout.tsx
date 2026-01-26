@@ -20,12 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <Providers>
-      <html lang="en" className={inter.variable}>
-        <body className="antialiased overflow-hidden font-sans">
-          {children}
-        </body>
-      </html>
-    </Providers>
+    <html lang="en" className={inter.variable}>
+      <body className="antialiased overflow-hidden font-sans">
+        <Providers>{children}</Providers>
+      </body>
+    </html>
   );
 }
