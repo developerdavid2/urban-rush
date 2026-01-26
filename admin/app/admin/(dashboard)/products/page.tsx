@@ -1,21 +1,21 @@
-// app/products/page.tsx
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
-import { ProductForm } from "@/modules/products/ui/components/product-form";
+import { productApi } from "@/app/actions/productApi";
 import {
   getStockStatus,
   getStockStatusConfig,
   StockStatus,
 } from "@/lib/dashboard-utils";
-import { Button, Modal, useDisclosure, Chip } from "@heroui/react";
+import { Column, TableView } from "@/modules/components/table-view";
+import { DeleteProductModal } from "@/modules/products/ui/components/delete-product-modal";
+import { ProductForm } from "@/modules/products/ui/components/product-form";
+import { Product } from "@/types/product";
+import { Button, Chip, useDisclosure } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { productApi } from "@/app/actions/productApi";
 import { Loader2, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
+import React, { useCallback, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Product } from "@/types/product";
-import { TableView, Column } from "@/modules/components/table-view";
 
 const columns: Column[] = [
   { name: "IMAGE", uid: "images" },
@@ -28,7 +28,20 @@ const columns: Column[] = [
 ];
 
 export default function ProductsPage() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // Separate states for create/edit modal
+  const {
+    isOpen: isFormOpen,
+    onOpen: onFormOpen,
+    onOpenChange: onFormOpenChange,
+  } = useDisclosure();
+
+  // Separate state for delete modal
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(
     undefined
@@ -39,15 +52,37 @@ export default function ProductsPage() {
     queryFn: productApi.getAllProducts,
   });
 
-  const products = productsResponse?.data;
+  const products = productsResponse?.data || [];
 
   const enhancedProducts = useMemo(() => {
-    if (!products) return;
     return products.map((p: Product) => ({
       ...p,
       status: getStockStatus(p.stock),
     }));
   }, [products]);
+
+  const openCreateModal = () => {
+    setModalMode("create");
+    setSelectedProduct(undefined);
+    onFormOpen();
+  };
+
+  const openEditModal = useCallback(
+    (product: Product) => {
+      setModalMode("edit");
+      setSelectedProduct(product);
+      onFormOpen();
+    },
+    [onFormOpen]
+  );
+
+  const openDeleteModal = useCallback(
+    (product: Product) => {
+      setSelectedProduct(product);
+      onDeleteOpen();
+    },
+    [onDeleteOpen]
+  );
 
   const renderCell = useCallback(
     (product: Product, columnKey: React.Key) => {
@@ -111,11 +146,7 @@ export default function ProductsPage() {
                 isIconOnly
                 size="sm"
                 variant="light"
-                onPress={() => {
-                  setModalMode("edit");
-                  setSelectedProduct(product);
-                  onOpen();
-                }}
+                onPress={() => openEditModal(product)}
               >
                 <PencilIcon className="size-4 text-emerald-100" />
               </Button>
@@ -123,11 +154,7 @@ export default function ProductsPage() {
                 isIconOnly
                 size="sm"
                 variant="light"
-                onPress={() => {
-                  if (confirm("Delete this product?")) {
-                    toast.success("Product deleted (placeholder)");
-                  }
-                }}
+                onPress={() => openDeleteModal(product)}
               >
                 <Trash2Icon className="size-4 text-red-400/70" />
               </Button>
@@ -140,14 +167,8 @@ export default function ProductsPage() {
             : String(cellValue);
       }
     },
-    [onOpen]
+    [openEditModal, openDeleteModal]
   );
-
-  const openCreateModal = () => {
-    setModalMode("create");
-    setSelectedProduct(undefined);
-    onOpen();
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -190,29 +211,24 @@ export default function ProductsPage() {
           isLoading={isLoading}
           emptyMessage="No products found"
           searchPlaceholder="Search by name or category..."
-          searchKeys={["name", "category"]} // Search through these fields
+          searchKeys={["name", "category"]}
         />
       )}
 
-      <Modal
-        size="5xl"
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        isDismissable={false}
-        isKeyboardDismissDisabled={true}
-        scrollBehavior="inside"
-        classNames={{
-          backdrop: "bg-admin-bg/50 backdrop-blur-sm",
-          base: "bg-[#111412] border border-admin-divider/30",
-          header: "border-b border-admin-divider",
-          footer: "border-t border-admin-divider",
-        }}
-      >
-        <ProductForm
-          onClose={() => onOpenChange()}
-          product={modalMode === "edit" ? selectedProduct : undefined}
-        />
-      </Modal>
+      {/* Create / Edit Form Modal */}
+      <ProductForm
+        key={`product-form-${modalMode}-${selectedProduct?._id || "new"}`} // ← Force remount when mode or product changes
+        isOpen={isFormOpen}
+        onClose={onFormOpenChange}
+        product={modalMode === "edit" ? selectedProduct : undefined}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteProductModal
+        product={selectedProduct}
+        isOpen={isDeleteOpen}
+        onClose={onDeleteOpenChange}
+      />
     </div>
   );
 }

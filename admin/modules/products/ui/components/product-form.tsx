@@ -3,6 +3,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
@@ -26,6 +27,7 @@ import type { Product } from "@/types/product";
 interface ProductFormProps {
   product?: Product;
   onClose: () => void;
+  isOpen: boolean;
 }
 
 const CATEGORIES = [
@@ -36,7 +38,7 @@ const CATEGORIES = [
   { value: "home", label: "Home & Garden" },
 ];
 
-export function ProductForm({ product, onClose }: ProductFormProps) {
+export function ProductForm({ product, isOpen, onClose }: ProductFormProps) {
   const queryClient = useQueryClient();
   const isEditMode = !!product;
 
@@ -136,297 +138,309 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
   };
 
   return (
-    <ModalContent>
-      {(modalOnClose) => (
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader className="flex flex-col gap-1">
-            {isEditMode ? "Edit Product" : "Add New Product"}
-          </ModalHeader>
+    <Modal
+      size="5xl"
+      isOpen={isOpen}
+      onOpenChange={onClose}
+      isDismissable={false}
+      isKeyboardDismissDisabled={true}
+      scrollBehavior="inside"
+      classNames={{
+        backdrop: "bg-admin-bg/50 backdrop-blur-sm",
+        base: "bg-[#111412] border border-admin-divider/30",
+        header: "border-b border-admin-divider",
+        footer: "border-t border-admin-divider",
+      }}
+    >
+      <ModalContent>
+        {(modalOnClose) => (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <ModalHeader className="flex flex-col gap-1">
+              {isEditMode ? "Edit Product" : "Add New Product"}
+            </ModalHeader>
 
-          <ModalBody className="max-h-[calc(90vh-200px)] overflow-y-auto">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Product Name */}
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    label="Product Name"
-                    placeholder="Enter product name"
-                    isInvalid={!!errors.name}
-                    errorMessage={errors.name?.message}
-                    isDisabled={isSubmitting}
-                    variant="bordered"
-                    classNames={{
-                      inputWrapper: cn(
-                        "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                        "hover:border-zinc-500",
-                        "data-[focus=true]:!border-emerald-600",
-                        "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                        "transition-all duration-200",
-                        isSubmitting && "opacity-70 cursor-not-allowed"
-                      ),
-                      label:
-                        "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                      input: "text-white",
-                    }}
-                  />
-                )}
-              />
+            <ModalBody className="max-h-[calc(90vh-200px)] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Product Name */}
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      label="Product Name"
+                      placeholder="Enter product name"
+                      isInvalid={!!errors.name}
+                      errorMessage={errors.name?.message}
+                      isDisabled={isSubmitting}
+                      variant="bordered"
+                      classNames={{
+                        inputWrapper: cn(
+                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                          "hover:border-zinc-500",
+                          "data-[focus=true]:!border-emerald-600",
+                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                          "transition-all duration-200",
+                          isSubmitting && "opacity-70 cursor-not-allowed"
+                        ),
+                        label:
+                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
 
-              {/* Category */}
-              <Controller
-                name="category"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Category"
-                    placeholder="Select category"
-                    variant="bordered"
-                    isInvalid={!!errors.category}
-                    errorMessage={errors.category?.message}
-                    isDisabled={isSubmitting}
-                    selectedKeys={field.value ? [field.value] : []} // ← key fix: controlled selection
-                    onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as string; // single select
-                      field.onChange(value);
-                    }}
-                    classNames={{
-                      label:
-                        "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                      value: cn(
-                        "text-zinc-400",
-                        "group-data-[has-value=true]:text-white",
-                        "group-data-[has-value=false]:opacity-70 group-data-[has-value=false]:italic"
-                      ),
-                      trigger: cn(
-                        "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                        "hover:border-zinc-500",
-                        "data-[focus=true]:!border-emerald-600",
-                        "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                        "data-[open=true]:border-emerald-600/70",
-                        "transition-all duration-200"
-                      ),
-                      popoverContent:
-                        "bg-[#1b211e] border border-admin-divider/60 shadow-xl backdrop-blur-sm rounded-lg p-1",
-                      listboxWrapper: "bg-transparent p-0",
-                      listbox: "bg-transparent p-1 gap-0.5",
-                    }}
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem
-                        key={cat.value}
+                {/* Category */}
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      label="Category"
+                      placeholder="Select category"
+                      variant="bordered"
+                      isInvalid={!!errors.category}
+                      errorMessage={errors.category?.message}
+                      isDisabled={isSubmitting}
+                      selectedKeys={field.value ? [field.value] : []} // ← key fix: controlled selection
+                      onSelectionChange={(keys) => {
+                        const value = Array.from(keys)[0] as string; // single select
+                        field.onChange(value);
+                      }}
+                      classNames={{
+                        label:
+                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                        value: cn(
+                          "text-zinc-400",
+                          "group-data-[has-value=true]:text-white",
+                          "group-data-[has-value=false]:opacity-70 group-data-[has-value=false]:italic"
+                        ),
+                        trigger: cn(
+                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                          "hover:border-zinc-500",
+                          "data-[focus=true]:!border-emerald-600",
+                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                          "data-[open=true]:border-emerald-600/70",
+                          "transition-all duration-200"
+                        ),
+                        popoverContent:
+                          "bg-[#1b211e] border border-admin-divider/60 shadow-xl backdrop-blur-sm rounded-lg p-1",
+                        listboxWrapper: "bg-transparent p-0",
+                        listbox: "bg-transparent p-1 gap-0.5",
+                      }}
+                    >
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem
+                          key={cat.value}
+                          classNames={{
+                            base: cn(
+                              "text-white transition-colors",
+                              "data-[hover=true]:bg-emerald-900/30",
+                              "data-[selected=true]:bg-emerald-900/50",
+                              "data-[selected=true]:text-emerald-400",
+                              "[&[data-selected=true][data-hover=true]]:bg-emerald-900/50",
+                              "[&[data-selected=true][data-hover=true]]:text-emerald-400",
+                              "data-[focus=true]:bg-emerald-950/40"
+                            ),
+                          }}
+                        >
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+
+                {/* Price */}
+                <Controller
+                  name="price"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type="number"
+                      step="0.01"
+                      label="Price ($)"
+                      placeholder="39.99"
+                      isInvalid={!!errors.price}
+                      errorMessage={errors.price?.message}
+                      isDisabled={isSubmitting}
+                      variant="bordered"
+                      classNames={{
+                        inputWrapper: cn(
+                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                          "hover:border-zinc-500",
+                          "data-[focus=true]:!border-emerald-600",
+                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                          "transition-all duration-200",
+                          isSubmitting && "opacity-70 cursor-not-allowed"
+                        ),
+                        label:
+                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
+
+                {/* Stock */}
+                <Controller
+                  name="stock"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type="number"
+                      label="Stock"
+                      placeholder="54"
+                      isInvalid={!!errors.stock}
+                      errorMessage={errors.stock?.message}
+                      isDisabled={isSubmitting}
+                      variant="bordered"
+                      classNames={{
+                        inputWrapper: cn(
+                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                          "hover:border-zinc-500",
+                          "data-[focus=true]:!border-emerald-600",
+                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                          "transition-all duration-200",
+                          isSubmitting && "opacity-70 cursor-not-allowed"
+                        ),
+                        label:
+                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
+
+                {/* Summary */}
+                <div className="col-span-2">
+                  <Controller
+                    name="summary"
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        {...field}
+                        label="Summary"
+                        placeholder="Brief product summary..."
+                        minRows={2}
+                        isInvalid={!!errors.summary}
+                        errorMessage={errors.summary?.message}
+                        isDisabled={isSubmitting}
+                        variant="bordered"
                         classNames={{
-                          base: cn(
-                            "text-white transition-colors",
-                            "data-[hover=true]:bg-emerald-900/30",
-                            "data-[selected=true]:bg-emerald-900/50",
-                            "data-[selected=true]:text-emerald-400",
-                            "[&[data-selected=true][data-hover=true]]:bg-emerald-900/50",
-                            "[&[data-selected=true][data-hover=true]]:text-emerald-400",
-                            "data-[focus=true]:bg-emerald-950/40"
+                          inputWrapper: cn(
+                            "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                            "hover:border-zinc-500",
+                            "data-[focus=true]:!border-emerald-600",
+                            "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                            "transition-all duration-200",
+                            isSubmitting && "opacity-70 cursor-not-allowed"
                           ),
+                          label:
+                            "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                          input: "text-white",
                         }}
-                      >
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              {/* Price */}
-              <Controller
-                name="price"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    label="Price ($)"
-                    placeholder="39.99"
-                    isInvalid={!!errors.price}
-                    errorMessage={errors.price?.message}
-                    isDisabled={isSubmitting}
-                    variant="bordered"
-                    classNames={{
-                      inputWrapper: cn(
-                        "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                        "hover:border-zinc-500",
-                        "data-[focus=true]:!border-emerald-600",
-                        "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                        "transition-all duration-200",
-                        isSubmitting && "opacity-70 cursor-not-allowed"
-                      ),
-                      label:
-                        "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                      input: "text-white",
-                    }}
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
 
-              {/* Stock */}
-              <Controller
-                name="stock"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    label="Stock"
-                    placeholder="54"
-                    isInvalid={!!errors.stock}
-                    errorMessage={errors.stock?.message}
-                    isDisabled={isSubmitting}
-                    variant="bordered"
-                    classNames={{
-                      inputWrapper: cn(
-                        "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                        "hover:border-zinc-500",
-                        "data-[focus=true]:!border-emerald-600",
-                        "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                        "transition-all duration-200",
-                        isSubmitting && "opacity-70 cursor-not-allowed"
-                      ),
-                      label:
-                        "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                      input: "text-white",
-                    }}
+                {/* Description */}
+                <div className="col-span-2">
+                  <Controller
+                    name="description"
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        {...field}
+                        label="Description"
+                        placeholder="Detailed product description..."
+                        minRows={4}
+                        isInvalid={!!errors.description}
+                        errorMessage={errors.description?.message}
+                        isDisabled={isSubmitting}
+                        variant="bordered"
+                        classNames={{
+                          inputWrapper: cn(
+                            "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
+                            "hover:border-zinc-500",
+                            "data-[focus=true]:!border-emerald-600",
+                            "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
+                            "transition-all duration-200",
+                            isSubmitting && "opacity-70 cursor-not-allowed"
+                          ),
+                          label:
+                            "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
+                          input: "text-white",
+                        }}
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
 
-              {/* Summary */}
-              <div className="col-span-2">
-                <Controller
-                  name="summary"
-                  control={control}
-                  render={({ field }) => (
-                    <Textarea
-                      {...field}
-                      label="Summary"
-                      placeholder="Brief product summary..."
-                      minRows={2}
-                      isInvalid={!!errors.summary}
-                      errorMessage={errors.summary?.message}
-                      isDisabled={isSubmitting}
-                      variant="bordered"
-                      classNames={{
-                        inputWrapper: cn(
-                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                          "hover:border-zinc-500",
-                          "data-[focus=true]:!border-emerald-600",
-                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                          "transition-all duration-200",
-                          isSubmitting && "opacity-70 cursor-not-allowed"
-                        ),
-                        label:
-                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                        input: "text-white",
-                      }}
-                    />
-                  )}
-                />
+                {/* Image Upload */}
+                <div className="col-span-2">
+                  <Controller
+                    name="images"
+                    control={control}
+                    render={({ field }) => (
+                      <ImageUpload
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        existingImages={watch("existingImages") || []}
+                        onRemoveExisting={(url) => {
+                          const current = watch("removedImages") || [];
+                          setValue("removedImages", [...current, url]);
+
+                          const existing = watch("existingImages") || [];
+                          setValue(
+                            "existingImages",
+                            existing.filter((img) => img !== url)
+                          );
+                        }}
+                        error={errors.images?.message}
+                        disabled={isSubmitting}
+                        isEdit={isEditMode}
+                      />
+                    )}
+                  />
+                </div>
               </div>
+            </ModalBody>
 
-              {/* Description */}
-              <div className="col-span-2">
-                <Controller
-                  name="description"
-                  control={control}
-                  render={({ field }) => (
-                    <Textarea
-                      {...field}
-                      label="Description"
-                      placeholder="Detailed product description..."
-                      minRows={4}
-                      isInvalid={!!errors.description}
-                      errorMessage={errors.description?.message}
-                      isDisabled={isSubmitting}
-                      variant="bordered"
-                      classNames={{
-                        inputWrapper: cn(
-                          "border-2 border-zinc-700 rounded-lg bg-zinc-900/40",
-                          "hover:border-zinc-500",
-                          "data-[focus=true]:!border-emerald-600",
-                          "data-[focus=true]:shadow-[0_0_0_3px_rgba(16,185,129,0.2)]",
-                          "transition-all duration-200",
-                          isSubmitting && "opacity-70 cursor-not-allowed"
-                        ),
-                        label:
-                          "group-data-[focus=true]:text-emerald-400 group-data-[filled=true]:text-background",
-                        input: "text-white",
-                      }}
-                    />
-                  )}
-                />
-              </div>
+            <ModalFooter>
+              <Button
+                variant="flat"
+                onPress={modalOnClose}
+                isDisabled={isSubmitting}
+                className="bg-zinc-300 text-admin-bg"
+              >
+                Cancel
+              </Button>
 
-              {/* Image Upload */}
-              <div className="col-span-2">
-                <Controller
-                  name="images"
-                  control={control}
-                  render={({ field }) => (
-                    <ImageUpload
-                      value={field.value || []}
-                      onChange={field.onChange}
-                      existingImages={watch("existingImages") || []}
-                      onRemoveExisting={(url) => {
-                        const current = watch("removedImages") || [];
-                        setValue("removedImages", [...current, url]);
-
-                        const existing = watch("existingImages") || [];
-                        setValue(
-                          "existingImages",
-                          existing.filter((img) => img !== url)
-                        );
-                      }}
-                      error={errors.images?.message}
-                      disabled={isSubmitting}
-                      isEdit={isEditMode}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button
-              variant="flat"
-              onPress={() => {
-                modalOnClose();
-                onClose();
-              }}
-              isDisabled={isSubmitting}
-              className="bg-zinc-300 text-admin-bg"
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-35"
-              isLoading={isSubmitting}
-              isDisabled={isSubmitting}
-              spinnerPlacement="start"
-              spinner={<Loader className="h-4 w-4 animate-spin" />}
-            >
-              {isSubmitting
-                ? isEditMode
-                  ? "Updating..."
-                  : "Creating..."
-                : isEditMode
-                ? "Update Product"
-                : "Create Product"}
-            </Button>
-          </ModalFooter>
-        </form>
-      )}
-    </ModalContent>
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-35"
+                isLoading={isSubmitting}
+                isDisabled={isSubmitting}
+                spinnerPlacement="start"
+                spinner={<Loader className="h-4 w-4 animate-spin" />}
+              >
+                {isSubmitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Creating..."
+                  : isEditMode
+                  ? "Update Product"
+                  : "Create Product"}
+              </Button>
+            </ModalFooter>
+          </form>
+        )}
+      </ModalContent>
+    </Modal>
   );
 }
