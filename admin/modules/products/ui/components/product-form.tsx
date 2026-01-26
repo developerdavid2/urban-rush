@@ -414,10 +414,7 @@ export function ProductForm({ product, isOpen, onClose }: ProductFormProps) {
             <ModalFooter>
               <Button
                 variant="flat"
-                onPress={() => {
-                  modalOnClose();
-                  onClose();
-                }}
+                onPress={modalOnClose}
                 isDisabled={isSubmitting}
                 className="bg-zinc-300 text-admin-bg"
               >
