@@ -55,17 +55,6 @@ app.use(cookieParser());
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
-app.use((req, res, next) => {
-  console.log("🔍 Incoming Request:", {
-    method: req.method,
-    path: req.path,
-    origin: req.headers.origin,
-    hasAuthHeader: !!req.headers.authorization,
-    authHeader: req.headers.authorization?.substring(0, 30) + "...",
-  });
-  next();
-});
-
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
 // ROUTES

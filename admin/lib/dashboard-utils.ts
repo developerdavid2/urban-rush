@@ -175,3 +175,14 @@ export function getStockStatusConfig(status: StockStatus): StockStatusConfig {
 
   return configs[status];
 }
+
+export const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};

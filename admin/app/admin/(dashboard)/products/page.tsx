@@ -211,7 +211,7 @@ export default function ProductsPage() {
           isLoading={isLoading}
           emptyMessage="No products found"
           searchPlaceholder="Search by name or category..."
-          searchKeys={["name", "category"]}
+          searchKeys={["name", "category", "price", "status"]}
         />
       )}
 
