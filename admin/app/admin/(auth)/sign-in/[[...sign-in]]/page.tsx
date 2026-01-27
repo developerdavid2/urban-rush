@@ -4,11 +4,11 @@ import { SignIn } from "@clerk/nextjs";
 export default async function AdminSignInPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   // Use the returnBackUrl from middleware if present
-  const afterSignInUrl =
-    ((await searchParams.redirect_url) as string) || "/admin";
+  const params = await searchParams;
+  const afterSignInUrl = (params.redirect_url as string) || "/admin";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

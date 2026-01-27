@@ -32,22 +32,21 @@ export default function CustomersPage() {
 
   const customers = customersResponse?.data || [];
 
-  console.log("Users", customers);
-
   const renderCell = useCallback((customer: User, columnKey: React.Key) => {
     const key = columnKey as keyof User;
     const cellValue = customer[key];
 
     switch (columnKey) {
-      case "_id":
+      case "_id": {
         const id = String(cellValue).slice(0, 8);
         return (
           <p className="font-medium text-small uppercase text-gray-300">
             #{id}
           </p>
         );
+      }
 
-      case "name":
+      case "name": {
         const name = String(cellValue).toLowerCase();
         const image = customer?.profileImageUrl;
         return (
@@ -64,21 +63,23 @@ export default function CustomersPage() {
             </p>
           </div>
         );
+      }
 
       case "email":
         return <p className="text-xs text-gray-400">{String(cellValue)}</p>;
 
-      case "addresses":
+      case "addresses": {
         const addresses = (Array.isArray(cellValue) && cellValue.length) || 0;
         return (
           <p className="text-small  text-gray-300">{addresses} address(es)</p>
         );
+      }
 
-      case "wishlist":
+      case "wishlist": {
         const wishlist = (Array.isArray(cellValue) && cellValue.length) || 0;
         return <p className="text-small  text-gray-300">{wishlist} item(s)</p>;
-
-      case "status":
+      }
+      case "status": {
         const config = getUserStatusConfig(cellValue as UserStatus);
         return (
           <Chip
@@ -92,11 +93,12 @@ export default function CustomersPage() {
             {config.label}
           </Chip>
         );
+      }
 
-      case "createdAt":
+      case "createdAt": {
         const date = formatDate(String(cellValue));
-        console.log(date);
         return <p className="text-xs text-gray-400">{date}</p>;
+      }
 
       default:
         return typeof cellValue === "object"

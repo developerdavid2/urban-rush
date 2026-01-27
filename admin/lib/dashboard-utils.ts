@@ -185,15 +185,6 @@ export interface UserStatusConfig {
   borderClass: string;
 }
 
-export function getUserStatus(
-  quantity: number,
-  lowStockThreshold: number = 10
-): StockStatus {
-  if (quantity === 0) return "out-of-stock";
-  if (quantity <= lowStockThreshold) return "low-stock";
-  return "in-stock";
-}
-
 export function getUserStatusConfig(status: UserStatus): UserStatusConfig {
   const configs: Record<UserStatus, UserStatusConfig> = {
     active: {
@@ -203,7 +194,7 @@ export function getUserStatusConfig(status: UserStatus): UserStatusConfig {
       borderClass: "border-success/20",
     },
     inactive: {
-      label: "In Active",
+      label: "Inactive",
       bgClass: "bg-warning/10",
       textClass: "text-warning",
       borderClass: "border-warning/20",
