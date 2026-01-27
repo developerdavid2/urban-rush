@@ -52,10 +52,10 @@ export default function ProductsPage() {
     queryFn: productApi.getAllProducts,
   });
 
-  const products = productsResponse?.data || [];
+  const products = productsResponse?.data;
 
   const enhancedProducts = useMemo(() => {
-    return products.map((p: Product) => ({
+    return products?.map((p: Product) => ({
       ...p,
       status: getStockStatus(p.stock),
     }));
@@ -174,7 +174,9 @@ export default function ProductsPage() {
     <div className="space-y-6 p-6">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Products</h1>
+          <h1 className="text-3xl font-bold text-text-primary">
+            Products ({products?.length || 0})
+          </h1>
           <p className="text-sm text-text-secondary mt-1">
             Manage your entire product inventory
           </p>
