@@ -8,7 +8,7 @@ export default async function AdminSignInPage({
 }) {
   // Use the returnBackUrl from middleware if present
   const afterSignInUrl =
-    (await (searchParams.redirect_url as string)) || "/admin";
+    ((await searchParams.redirect_url) as string) || "/admin";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
