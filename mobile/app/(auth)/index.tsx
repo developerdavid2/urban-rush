@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 const AuthScreen = () => {
-  const { isLoading, handleSocialAuth, strategy } = useSocialAuth();
+  const { loadingStrategy, handleSocialAuth } = useSocialAuth();
 
   return (
     <View className="flex-1 justify-center items-center px-6">
@@ -26,7 +26,7 @@ const AuthScreen = () => {
           <TouchableOpacity
             className="rounded-full px-16 py-3 flex flex-row border border-gray-300"
             onPress={() => handleSocialAuth("oauth_google")}
-            disabled={isLoading}
+            disabled={loadingStrategy !== null}
             style={{
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.1,
@@ -34,7 +34,7 @@ const AuthScreen = () => {
             }}
           >
             <View className="flex-row items-center justify-center gap-2 w-full">
-              {strategy === "oauth_google" && isLoading ? (
+              {loadingStrategy === "oauth_google" ? (
                 <View className="size-10 items-center justify-center">
                   <ActivityIndicator size="small" color="#4285f4" />
                 </View>
@@ -46,7 +46,7 @@ const AuthScreen = () => {
                 />
               )}
               <Text className="text-black font-medium text-base">
-                {strategy === "oauth_google" && isLoading
+                {loadingStrategy === "oauth_google"
                   ? "Signing in..."
                   : "Continue with Google"}
               </Text>
@@ -57,7 +57,7 @@ const AuthScreen = () => {
           <TouchableOpacity
             className="rounded-full px-16 py-3 flex flex-row border border-gray-300"
             onPress={() => handleSocialAuth("oauth_apple")}
-            disabled={isLoading}
+            disabled={loadingStrategy !== null}
             style={{
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.1,
@@ -65,7 +65,7 @@ const AuthScreen = () => {
             }}
           >
             <View className="flex-row items-center justify-center gap-2 w-full">
-              {strategy === "oauth_apple" && isLoading ? (
+              {loadingStrategy === "oauth_apple" && loadingStrategy ? (
                 <View className="size-10 items-center justify-center">
                   <ActivityIndicator size="small" color="#000000" />
                 </View>
@@ -77,7 +77,7 @@ const AuthScreen = () => {
                 />
               )}
               <Text className="text-black font-medium text-base">
-                {strategy === "oauth_apple" && isLoading
+                {loadingStrategy === "oauth_apple"
                   ? "Signing in..."
                   : "Continue with Apple"}
               </Text>
