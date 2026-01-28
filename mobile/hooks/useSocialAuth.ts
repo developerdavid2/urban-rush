@@ -16,6 +16,11 @@ function useSocialAuth() {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+      } else {
+        Alert.alert(
+          "Sign-in incomplete",
+          "We couldn't complete sign-in. Please try again."
+        );
       }
     } catch (error) {
       console.error("Error in social auth", error);

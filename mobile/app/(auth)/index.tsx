@@ -87,9 +87,29 @@ const AuthScreen = () => {
 
         <Text className="text-center text-gray-500 text-xs leading-4 mt-4 px-2">
           By signing up, you agree to our{" "}
-          <Text className="text-blue-500">Terms</Text>,{" "}
-          <Text className="text-blue-500">Privacy Policy</Text> and{" "}
-          <Text className="text-blue-500">Cookie Use</Text>
+          <Text
+            className="text-blue-500"
+            onPress={() => {}}
+            accessibilityRole="link"
+          >
+            Terms
+          </Text>
+          ,{" "}
+          <Text
+            className="text-blue-500"
+            onPress={() => {}}
+            accessibilityRole="link"
+          >
+            Privacy Policy
+          </Text>{" "}
+          and{" "}
+          <Text
+            className="text-blue-500"
+            onPress={() => {}}
+            accessibilityRole="link"
+          >
+            Cookie Use
+          </Text>
         </Text>
       </View>
     </View>
