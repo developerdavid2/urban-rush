@@ -100,7 +100,7 @@ export function DeleteProductModal({
                 isLoading={isDeleting}
                 spinner={<Loader className="h-4 w-4 animate-spin" />}
                 spinnerPlacement="start"
-                className="bg-red-400/80 text-white min-w-[100px]"
+                className="bg-red-400/80 text-white min-w-25"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </Button>
