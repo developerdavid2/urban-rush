@@ -84,7 +84,7 @@ export default function ProductsPage() {
 
       switch (columnKey) {
         case "images":
-          const firstImage = Array.isArray(cellValue) && cellValue[0];
+          const firstImage = product.images?.[0];
           return firstImage ? (
             <div className="relative size-18 rounded-md overflow-hidden bg-zinc-800">
               <Image
