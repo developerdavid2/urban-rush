@@ -6,7 +6,9 @@ import mongoose from "mongoose";
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find()
+      .populate({ path: "reviews" })
+      .sort({ createdAt: -1 });
 
     if (products.length === 0) {
       return res.status(200).json({
@@ -37,7 +39,7 @@ export const getProductById = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     }
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate({ path: "reviews" });
 
     if (!product) {
       return res.status(404).json({
@@ -132,7 +134,7 @@ export const createProduct = async (req: Request, res: Response) => {
       description,
       summary,
       price: parseFloat(price),
-      priceDiscount: priceDiscount ? parseFloat(priceDiscount) : undefined,
+      priceDiscount: priceDiscount ? parseFloat(priceDiscount) : 0,
       category,
       stock: parseInt(stock),
       images: uploadedCloudinaryUrls,

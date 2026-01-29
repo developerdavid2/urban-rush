@@ -280,31 +280,47 @@ export const getWishlist = async (req: Request, res: Response) => {
 };
 export const addToWishlist = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
+    const { productId } = req.body;
+
+    if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
+    const user = await User.findById(req.user?._id);
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
-    const { productId } = req.body;
-    if (!mongoose.isValidObjectId(productId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid product ID" });
-    }
-    if (user.wishlist.includes(productId)) {
+
+    // Check if already in wishlist
+    const isInWishlist = user.wishlist.some(
+      (id) => id.toString() === productId
+    );
+
+    if (isInWishlist) {
       return res.status(400).json({
         success: false,
         message: "Product already in wishlist",
       });
     }
+
+    // Add to wishlist
     user.wishlist.push(new mongoose.Types.ObjectId(productId));
     await user.save();
+
+    // ✅ Fetch user with populated wishlist
+    const updatedUser = await User.findById(user._id).populate("wishlist");
+
     res.status(200).json({
       success: true,
       message: "Product added to wishlist",
-      data: user.wishlist,
+      data: updatedUser?.wishlist || [],
     });
   } catch (error) {
     console.error("Error adding to wishlist:", error);

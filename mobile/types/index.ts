@@ -1,13 +1,18 @@
 export interface Product {
   _id: string;
+  slug: string;
   name: string;
-  description: string;
   price: number;
-  stock: number;
-  category: string;
+  priceDiscount: number;
+  summary: string;
+  description: string;
   images: string[];
-  averageRating: number;
-  totalReviews: number;
+  category: string;
+  stock: number;
+  status?: string;
+  reviews?: [];
+  ratingsAverage: number;
+  ratingsQuantity: number;
   createdAt: string;
   updatedAt: string;
 }

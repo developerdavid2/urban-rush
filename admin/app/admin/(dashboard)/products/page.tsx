@@ -54,13 +54,6 @@ export default function ProductsPage() {
 
   const products = productsResponse?.data;
 
-  const enhancedProducts = useMemo(() => {
-    return products?.map((p: Product) => ({
-      ...p,
-      status: getStockStatus(p.stock),
-    }));
-  }, [products]);
-
   const openCreateModal = () => {
     setModalMode("create");
     setSelectedProduct(undefined);
@@ -129,8 +122,8 @@ export default function ProductsPage() {
           return (
             <Chip
               classNames={{
-                base: `capitalize border ${config.borderClass} ${config.bgClass}`,
-                content: config.textClass,
+                base: `capitalize border ${config?.borderClass} ${config?.bgClass}`,
+                content: config?.textClass,
               }}
               size="sm"
               variant="flat"
@@ -206,7 +199,7 @@ export default function ProductsPage() {
         </div>
       ) : (
         <TableView<Product>
-          items={enhancedProducts}
+          items={products}
           columns={columns}
           renderCell={renderCell}
           getItemKey={(product) => product._id}

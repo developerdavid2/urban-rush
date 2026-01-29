@@ -94,8 +94,10 @@ productSchema.virtual("reviews", {
 });
 
 // Virtual for in stock
-productSchema.virtual("inStock").get(function (this: ProductDocument) {
-  return this.stock > 0;
+productSchema.virtual("status").get(function (this: ProductDocument) {
+  if (this.stock === 0) return "out-of-stock";
+  if (this.stock <= 10) return "low-stock";
+  return "in-stock";
 });
 
 // Pre-save middleware: Generate slug - NO MORE ERRORS!
