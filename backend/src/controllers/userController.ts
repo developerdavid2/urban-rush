@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/userModel";
 import mongoose from "mongoose";
+import Product from "../models/productModel";
 
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
@@ -280,31 +281,51 @@ export const getWishlist = async (req: Request, res: Response) => {
 };
 export const addToWishlist = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
+    const { productId } = req.body;
+
+    if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+    const userId = req.user?._id;
+    const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
-    const { productId } = req.body;
-    if (!mongoose.isValidObjectId(productId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid product ID" });
+
+    const productExists = await Product.exists({ _id: productId });
+    if (!productExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
-    if (user.wishlist.includes(productId)) {
+
+    const updateResult = await User.updateOne(
+      { _id: userId, wishlist: { $ne: productId } },
+      { $addToSet: { wishlist: productId } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
       return res.status(400).json({
         success: false,
         message: "Product already in wishlist",
       });
     }
-    user.wishlist.push(new mongoose.Types.ObjectId(productId));
-    await user.save();
+
+    // ✅ Fetch user with populated wishlist
+    const updatedUser = await User.findById(user._id).populate("wishlist");
+
     res.status(200).json({
       success: true,
       message: "Product added to wishlist",
-      data: user.wishlist,
+      data: updatedUser?.wishlist || [],
     });
   } catch (error) {
     console.error("Error adding to wishlist:", error);
