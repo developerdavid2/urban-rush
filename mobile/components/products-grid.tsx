@@ -53,12 +53,11 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
       >
         <View className="relative">
           <Image
-            source={{ uri: product.images[0] }}
+            source={{ uri: product.images?.[0] }}
             className="w-full h-44 bg-background-lighter"
             resizeMode="cover"
           />
 
-          {/* ✅ No loading state - instant toggle */}
           <TouchableOpacity
             className="absolute top-3 right-3 bg-black/30 backdrop-blur-xl p-2 rounded-full"
             activeOpacity={0.7}
@@ -146,7 +145,6 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
       numColumns={2}
       columnWrapperStyle={{
         justifyContent: "space-between",
-        paddingHorizontal: 16,
       }}
       showsVerticalScrollIndicator={false}
       scrollEnabled={false}

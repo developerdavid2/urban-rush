@@ -89,7 +89,7 @@ productSchema.index({ name: "text", summary: "text", description: "text" });
 // Virtual for reviews
 productSchema.virtual("reviews", {
   ref: "Review",
-  foreignField: "product",
+  foreignField: "productId",
   localField: "_id",
 });
 

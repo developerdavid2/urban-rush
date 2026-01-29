@@ -39,7 +39,13 @@ export const getProductById = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     }
 
-    const product = await Product.findById(id).populate({ path: "reviews" });
+    const product = await Product.findById(id)
+      .populate({
+        path: "reviews",
+        select: "rating user createdAt",
+        perDocumentLimit: 3,
+      })
+      .sort({ createdAt: -1 });
 
     if (!product) {
       return res.status(404).json({

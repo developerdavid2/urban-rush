@@ -42,7 +42,7 @@ const useWishlist = () => {
       productId,
     }: {
       productId: string;
-      product?: Product;
+      product: Product;
     }) => {
       const { data } = await api.post<AddToWishlistResponse>(
         "/api/v1/users/me/wishlist",
