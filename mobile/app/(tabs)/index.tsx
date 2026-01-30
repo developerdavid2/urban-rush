@@ -28,11 +28,13 @@ const ShopTabScreen = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ Pull to refresh handler
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   };
   const products: Product[] = productsResponse?.data;
 

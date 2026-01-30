@@ -88,7 +88,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
         </View>
 
         <View className="p-3">
-          <Text className="text-text-secondary text-xs mb-1">
+          <Text className="text-text-secondary text-xs mb-1 capitalize">
             {product.category}
           </Text>
           <Text
