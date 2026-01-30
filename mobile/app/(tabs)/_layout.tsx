@@ -5,12 +5,14 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, Dimensions, Platform } from "react-native";
 import { BlurView } from "expo-blur";
+import useCart from "@/hooks/useCart"; // ✅ Import the hook
 
 const { width } = Dimensions.get("window");
 
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
   const { isSignedIn, isLoaded } = useAuth();
+  const { cart } = useCart(); // ✅ Get cart count
 
   if (!isLoaded) return null;
 
@@ -84,6 +86,8 @@ const TabsLayout = () => {
         name="cart"
         options={{
           title: "Cart",
+          tabBarBadge:
+            cart?.items?.length > 0 ? cart?.items?.length : undefined,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "cart" : "cart-outline"}

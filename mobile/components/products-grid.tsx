@@ -6,7 +6,7 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 import { Product } from "@/types";
 import useWishlist from "@/hooks/useWishlist";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,28 +21,20 @@ interface ProductsGridProps {
 
 const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { addToCart } = useCart();
+  const { addToCart, isInCart } = useCart();
 
-  // ✅ Only track cart loading, NOT wishlist
-  const [loadingCart, setLoadingCart] = useState<string | null>(null);
-
-  // ✅ Fire and forget - no loading state needed
+  // ✅ Fire and forget for both wishlist and cart
   const handleToggleWishlist = (product: Product) => {
-    toggleWishlist(product._id, product);
+    toggleWishlist(product?._id, product);
   };
 
-  const handleAddToCart = async (productId: string) => {
-    setLoadingCart(productId);
-    try {
-      await addToCart({ productId, quantity: 1 });
-    } finally {
-      setLoadingCart(null);
-    }
+  const handleAddToCart = (product: Product) => {
+    addToCart(product?._id, 1, product);
   };
 
   const renderProduct = ({ item: product }: { item: Product }) => {
-    const isCartLoading = loadingCart === product._id;
-    const inWishlist = isInWishlist(product._id);
+    const inWishlist = isInWishlist(product?._id);
+    const inCartAlready = isInCart(product?._id);
 
     return (
       <TouchableOpacity
@@ -58,6 +50,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             resizeMode="cover"
           />
 
+          {/* ✅ Wishlist - instant toggle */}
           <TouchableOpacity
             className="absolute top-3 right-3 bg-black/30 backdrop-blur-xl p-2 rounded-full"
             activeOpacity={0.7}
@@ -96,17 +89,20 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             <Text className="text-primary font-bold text-lg">
               ${product.price.toFixed(2)}
             </Text>
+
+            {/* ✅ Cart - instant feedback with checkmark when in cart */}
             <TouchableOpacity
-              className="bg-primary rounded-full w-8 h-8 items-center justify-center"
+              className={`rounded-full w-8 h-8 items-center justify-center ${
+                inCartAlready ? "bg-green-500" : "bg-primary"
+              }`}
               activeOpacity={0.7}
-              onPress={() => handleAddToCart(product._id)}
-              disabled={isCartLoading}
+              onPress={() => handleAddToCart(product)}
             >
-              {isCartLoading ? (
-                <ActivityIndicator size="small" color="#121212" />
-              ) : (
-                <Ionicons name="add" size={18} color="#121212" />
-              )}
+              <Ionicons
+                name={inCartAlready ? "checkmark" : "add"}
+                size={18}
+                color="#121212"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -141,10 +137,11 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     <FlatList
       data={products}
       renderItem={renderProduct}
-      keyExtractor={(item) => item._id}
+      keyExtractor={(item) => item?._id}
       numColumns={2}
       columnWrapperStyle={{
         justifyContent: "space-between",
+        paddingHorizontal: 16,
       }}
       showsVerticalScrollIndicator={false}
       scrollEnabled={false}
