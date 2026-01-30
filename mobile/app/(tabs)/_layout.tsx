@@ -38,7 +38,7 @@ const TabsLayout = () => {
           paddingBottom: 8,
           paddingHorizontal: 12,
           marginHorizontal: horizontalMargin,
-          marginBottom: Math.max(20, insets.bottom + 8),
+          marginBottom: Math.max(20, insets.bottom + 4),
           borderRadius: 28,
           borderWidth: 1,
           borderColor: "rgba(255, 255, 255, 0.1)",
@@ -88,6 +88,12 @@ const TabsLayout = () => {
           title: "Cart",
           tabBarBadge:
             cart?.items?.length > 0 ? cart?.items?.length : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: "#1DB954",
+            color: "#000",
+            fontSize: 10,
+            fontWeight: "700",
+          },
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "cart" : "cart-outline"}

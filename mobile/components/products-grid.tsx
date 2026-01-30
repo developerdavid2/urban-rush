@@ -138,7 +138,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
                         : "alert"
                 }
                 size={18}
-                color="#121212"
+                color="white"
               />
             </TouchableOpacity>
           </View>
@@ -185,7 +185,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
       numColumns={2}
       columnWrapperStyle={{
         justifyContent: "space-between",
-        paddingHorizontal: 16,
+        paddingHorizontal: 0,
       }}
       showsVerticalScrollIndicator={false}
       scrollEnabled={false}

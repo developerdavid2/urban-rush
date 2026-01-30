@@ -98,3 +98,12 @@ export interface Cart {
   createdAt: string;
   updatedAt: string;
 }
+
+export type SecurityOption = {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  type: "toggle" | "navigation";
+  value?: boolean;
+};
