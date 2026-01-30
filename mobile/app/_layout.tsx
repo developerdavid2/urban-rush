@@ -25,7 +25,20 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <Stack screenOptions={{ headerShown: false }} />
-              <Toasts />
+              <Toasts
+                defaultStyle={{
+                  view: {
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
+                    borderRadius: 8,
+                  },
+                  text: {
+                    color: "white",
+                  },
+                  indicator: {
+                    marginRight: 16,
+                  },
+                }}
+              />
             </GestureHandlerRootView>
           </QueryClientProvider>
         </ClerkLoaded>
