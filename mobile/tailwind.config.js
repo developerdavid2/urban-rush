@@ -7,12 +7,12 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#1DB954", // spotify green
+          DEFAULT: "#009860", // spotify green
           light: "#1ED760",
           dark: "#1AA34A",
         },
         background: {
-          DEFAULT: "#121212", // dark background
+          DEFAULT: "#141414", // dark background
           light: "#181818",
           lighter: "#282828",
         },

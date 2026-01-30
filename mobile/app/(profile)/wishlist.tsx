@@ -112,8 +112,8 @@ const Wishlist = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#00D9FF" // iOS spinner color
-              colors={["#00D9FF"]} // Android spinner colors
+              tintColor="#1AA34A" // iOS spinner color
+              colors={["#1AA34A"]} // Android spinner colors
             />
           }
         >
@@ -163,7 +163,7 @@ const Wishlist = () => {
                       >
                         {item.name}
                       </Text>
-                      <Text className="text-primary font-bold text-xl mb-2">
+                      <Text className="text-primary-dark font-bold text-xl mb-2">
                         ${item.price.toFixed(2)}
                       </Text>
 
@@ -278,8 +278,8 @@ const Wishlist = () => {
                           <ActivityIndicator size="small" color="#121212" />
                         ) : (
                           <View className="flex-row items-center">
-                            <Ionicons name="cart" size={18} color="#121212" />
-                            <Text className="text-background font-bold ml-2">
+                            <Ionicons name="cart" size={18} color="white" />
+                            <Text className="text-white font-bold ml-2">
                               Add to Cart
                             </Text>
                           </View>
@@ -309,7 +309,7 @@ function LoadingUI() {
         <Text className="text-text-primary text-2xl font-bold">Wishlist</Text>
       </View>
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#00D9FF" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
         <Text className="text-text-secondary mt-4">Loading wishlist...</Text>
       </View>
     </SafeScreen>

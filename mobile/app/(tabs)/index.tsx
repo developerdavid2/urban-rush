@@ -36,6 +36,7 @@ const ShopTabScreen = () => {
       setRefreshing(false);
     }
   };
+
   const products: Product[] = productsResponse?.data;
 
   const filteredProducts = useMemo(() => {
@@ -43,15 +44,12 @@ const ShopTabScreen = () => {
 
     let filtered = products;
 
-    //filtering by category
     if (selectedCategory !== "All") {
       filtered = filtered.filter(
         (product) =>
           product.category.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
-
-    //filtering by search query
 
     if (searchQuery.trim()) {
       filtered = filtered.filter((product) =>
@@ -68,17 +66,18 @@ const ShopTabScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]} // ✅ Makes the first child (header) sticky
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#00D9FF"
-            colors={["#00D9FF"]}
+            tintColor="#1AA34A"
+            colors={["#1AA34A"]}
           />
         }
       >
-        {/* HEADER */}
-        <View className="px-6 pb-4 pt-6">
+        {/* ✅ STICKY HEADER - Now inside ScrollView but stays fixed */}
+        <View className="bg-background px-6 pb-4 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <View>
               <Text className="text-text-primary text-3xl font-bold tracking-tight">
@@ -97,8 +96,8 @@ const ShopTabScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* SEARCH BAR  */}
-          <View className="bg-surface flex-row items-center px-5 py-4 rounded-2xl">
+          {/* SEARCH BAR */}
+          <View className="bg-surface flex-row items-center px-5 py-2 rounded-2xl">
             <Ionicons color="#666" size={22} name="search" />
             <TextInput
               placeholder="Search for products"
@@ -110,60 +109,59 @@ const ShopTabScreen = () => {
           </View>
         </View>
 
-        {/* CATEGORY FILTER */}
-        <View className="mb-6 max-w-[370px] mx-auto">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {CATEGORIES.map((category) => {
-              const isSelected = selectedCategory === category.name;
+        {/* ✅ SCROLLABLE CONTENT */}
+        <View>
+          {/* CATEGORY FILTER */}
+          <View className="mb-6 max-w-[370px] mx-auto">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+              }}
+            >
+              {CATEGORIES.map((category) => {
+                const isSelected = selectedCategory === category.name;
 
-              return (
-                <TouchableOpacity
-                  key={category.name}
-                  onPress={() => setSelectedCategory(category.name)}
-                  activeOpacity={0.5}
-                  className={`mr-3 rounded-2xl size-20 overflow-hidden items-center justify-center ${isSelected ? "bg-primary" : "bg-surface"}`}
-                >
-                  {category.icon ? (
-                    <Ionicons
-                      name={category.icon}
-                      size={36}
-                      color={isSelected ? "#121212" : "#fff"}
-                    />
-                  ) : (
-                    <Image
-                      source={category.image}
-                      className="size-12"
-                      resizeMode="contain"
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-text-primary text-lg font-bold">
-              Products
-            </Text>
-            <Text className="text-text-secondary text-sm">
-              {filteredProducts?.length} items
-            </Text>
+                return (
+                  <TouchableOpacity
+                    key={category.name}
+                    onPress={() => setSelectedCategory(category.name)}
+                    activeOpacity={0.5}
+                    className={`mr-3 rounded-2xl size-20 overflow-hidden items-center justify-center ${isSelected ? "bg-primary" : "bg-surface"}`}
+                  >
+                    {category.icon ? (
+                      <Ionicons name={category.icon} size={36} color="#fff" />
+                    ) : (
+                      <Image
+                        source={category.image}
+                        className="size-12"
+                        resizeMode="contain"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
 
-          {/* PRODUCT GRID */}
-          <ProductsGrid
-            products={filteredProducts ?? []}
-            isLoading={isLoading}
-            isError={isError}
-          />
+          <View className="px-6 mb-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-text-primary text-lg font-bold">
+                Products
+              </Text>
+              <Text className="text-text-secondary text-sm">
+                {filteredProducts?.length} items
+              </Text>
+            </View>
+
+            {/* PRODUCT GRID */}
+            <ProductsGrid
+              products={filteredProducts ?? []}
+              isLoading={isLoading}
+              isError={isError}
+            />
+          </View>
         </View>
       </ScrollView>
     </SafeScreen>
