@@ -21,20 +21,28 @@ interface ProductsGridProps {
 
 const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, isInCart, canAddToCart, getCartItemQuantity } = useCart();
 
-  // ✅ Fire and forget for both wishlist and cart
   const handleToggleWishlist = (product: Product) => {
-    toggleWishlist(product?._id, product);
+    toggleWishlist(product._id, product);
   };
 
   const handleAddToCart = (product: Product) => {
-    addToCart(product?._id, 1, product);
+    // ✅ Check if can add before attempting
+    if (!canAddToCart(product._id, product)) {
+      // This shouldn't happen as button is disabled, but just in case
+      return;
+    }
+    addToCart(product._id, 1, product);
   };
 
   const renderProduct = ({ item: product }: { item: Product }) => {
-    const inWishlist = isInWishlist(product?._id);
-    const inCartAlready = isInCart(product?._id);
+    const inWishlist = isInWishlist(product._id);
+    const inCartAlready = isInCart(product._id);
+    const cartQuantity = getCartItemQuantity(product._id);
+    const canAdd = canAddToCart(product._id, product);
+    const isOutOfStock = product.stock === 0;
+    const isLowStock = product.stock > 0 && product.stock <= 5;
 
     return (
       <TouchableOpacity
@@ -50,7 +58,23 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             resizeMode="cover"
           />
 
-          {/* ✅ Wishlist - instant toggle */}
+          {/* ✅ Stock Badge */}
+          {isOutOfStock && (
+            <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded-full">
+              <Text className="text-white text-xs font-semibold">
+                Out of Stock
+              </Text>
+            </View>
+          )}
+          {isLowStock && !inCartAlready && (
+            <View className="absolute top-3 left-3 bg-orange-500 px-2 py-1 rounded-full">
+              <Text className="text-white text-xs font-semibold">
+                Only {product.stock} left
+              </Text>
+            </View>
+          )}
+
+          {/* Wishlist Button */}
           <TouchableOpacity
             className="absolute top-3 right-3 bg-black/30 backdrop-blur-xl p-2 rounded-full"
             activeOpacity={0.7}
@@ -90,21 +114,43 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
               ${product.price.toFixed(2)}
             </Text>
 
-            {/* ✅ Cart - instant feedback with checkmark when in cart */}
+            {/* ✅ Smart Add to Cart Button */}
             <TouchableOpacity
               className={`rounded-full w-8 h-8 items-center justify-center ${
-                inCartAlready ? "bg-green-500" : "bg-primary"
+                isOutOfStock
+                  ? "bg-gray-500"
+                  : inCartAlready
+                    ? "bg-green-500"
+                    : canAdd
+                      ? "bg-primary"
+                      : "bg-orange-500"
               }`}
               activeOpacity={0.7}
               onPress={() => handleAddToCart(product)}
+              disabled={isOutOfStock || !canAdd}
             >
               <Ionicons
-                name={inCartAlready ? "checkmark" : "add"}
+                name={
+                  isOutOfStock
+                    ? "close"
+                    : inCartAlready
+                      ? "checkmark"
+                      : canAdd
+                        ? "add"
+                        : "alert"
+                }
                 size={18}
                 color="#121212"
               />
             </TouchableOpacity>
           </View>
+
+          {/* ✅ Show cart quantity if in cart */}
+          {inCartAlready && (
+            <Text className="text-green-500 text-xs mt-1 text-center font-semibold">
+              {cartQuantity} in cart
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -137,7 +183,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     <FlatList
       data={products}
       renderItem={renderProduct}
-      keyExtractor={(item) => item?._id}
+      keyExtractor={(item) => item._id}
       numColumns={2}
       columnWrapperStyle={{
         justifyContent: "space-between",
