@@ -1,17 +1,16 @@
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-} from "react-native";
-import React from "react";
-import { Product } from "@/types";
-import useWishlist from "@/hooks/useWishlist";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import useCart from "@/hooks/useCart";
+import useWishlist from "@/hooks/useWishlist";
+import { Product } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface ProductsGridProps {
   products: Product[];
@@ -89,7 +88,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
         </View>
 
         <View className="p-3">
-          <Text className="text-text-secondary text-xs mb-1">
+          <Text className="text-text-secondary text-xs mb-1 capitalize">
             {product.category}
           </Text>
           <Text
@@ -114,7 +113,6 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
               ${product.price.toFixed(2)}
             </Text>
 
-            {/* ✅ Smart Add to Cart Button */}
             <TouchableOpacity
               className={`rounded-full w-8 h-8 items-center justify-center ${
                 isOutOfStock

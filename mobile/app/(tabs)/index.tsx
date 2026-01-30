@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   Image,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -18,7 +19,23 @@ const ShopTabScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const { data: productsResponse, isLoading, isError } = useProducts();
+  const {
+    products: productsResponse,
+    isLoading,
+    isError,
+    refetch,
+  } = useProducts();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const products: Product[] = productsResponse?.data;
 
   const filteredProducts = useMemo(() => {
@@ -51,6 +68,14 @@ const ShopTabScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#00D9FF"
+            colors={["#00D9FF"]}
+          />
+        }
       >
         {/* HEADER */}
         <View className="px-6 pb-4 pt-6">
