@@ -269,7 +269,7 @@ const Wishlist = () => {
                       </TouchableOpacity>
                     ) : (
                       <TouchableOpacity
-                        className="bg-primary rounded-xl py-3 items-center"
+                        className="bg-emerald-500 rounded-xl py-3 items-center"
                         activeOpacity={0.8}
                         onPress={() => handleAddToCart(item)}
                         disabled={isLoadingThis || !canAdd}
@@ -278,8 +278,8 @@ const Wishlist = () => {
                           <ActivityIndicator size="small" color="#121212" />
                         ) : (
                           <View className="flex-row items-center">
-                            <Ionicons name="cart" size={18} color="white" />
-                            <Text className="text-white font-bold ml-2">
+                            <Ionicons name="cart" size={18} color="black" />
+                            <Text className="text-black font-bold ml-2">
                               Add to Cart
                             </Text>
                           </View>

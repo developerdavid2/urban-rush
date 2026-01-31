@@ -6,7 +6,8 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toasts } from "@backpackapp-io/react-native-toast";
-import { View } from "react-native"; // ✅ Import View
+import { View } from "react-native";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const queryClient = new QueryClient();
 
@@ -25,30 +26,30 @@ export default function RootLayout() {
         <ClerkLoaded>
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style={{ flex: 1 }}>
-              {/* ✅ Add dark background wrapper */}
-              <View style={{ flex: 1, backgroundColor: "#121212" }}>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: "#121212" },
-                    animation: "slide_from_right",
-                  }}
-                />
-                <Toasts
-                  defaultStyle={{
-                    view: {
-                      backgroundColor: "rgba(0, 0, 0, 0.8)",
-                      borderRadius: 8,
-                    },
-                    text: {
-                      color: "white",
-                    },
-                    indicator: {
-                      marginRight: 16,
-                    },
-                  }}
-                />
-              </View>
+              <BottomSheetModalProvider>
+                <View style={{ flex: 1, backgroundColor: "#121212" }}>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      animation: "slide_from_right",
+                    }}
+                  />
+                  <Toasts
+                    defaultStyle={{
+                      view: {
+                        backgroundColor: "rgba(0, 0, 0, 0.8)",
+                        borderRadius: 8,
+                      },
+                      text: {
+                        color: "white",
+                      },
+                      indicator: {
+                        marginRight: 16,
+                      },
+                    }}
+                  />
+                </View>
+              </BottomSheetModalProvider>
             </GestureHandlerRootView>
           </QueryClientProvider>
         </ClerkLoaded>

@@ -29,7 +29,6 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
   const handleAddToCart = (product: Product) => {
     // ✅ Check if can add before attempting
     if (!canAddToCart(product._id, product)) {
-      // This shouldn't happen as button is disabled, but just in case
       return;
     }
     addToCart(product._id, 1, product);
@@ -109,7 +108,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
           </View>
 
           <View className="flex-row items-center justify-between">
-            <Text className="text-primary font-bold text-lg">
+            <Text className="text-emerald-500 font-bold text-lg">
               ${product.price.toFixed(2)}
             </Text>
 
@@ -120,7 +119,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
                   : inCartAlready
                     ? "bg-green-500"
                     : canAdd
-                      ? "bg-primary"
+                      ? "bg-emerald-500"
                       : "bg-orange-500"
               }`}
               activeOpacity={0.7}
@@ -138,7 +137,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
                         : "alert"
                 }
                 size={18}
-                color="white"
+                color="black"
               />
             </TouchableOpacity>
           </View>
@@ -157,7 +156,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
   if (isLoading) {
     return (
       <View className="py-20 items-center justify-center">
-        <ActivityIndicator size="large" color="#00D9FF" />
+        <ActivityIndicator size="large" color="#1AA34A" />
         <Text className="text-text-secondary mt-4">Loading products...</Text>
       </View>
     );

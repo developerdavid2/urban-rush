@@ -99,7 +99,6 @@ const useWishlist = () => {
         old.filter((product) => product._id !== productId)
       );
 
-      // ✅ Show success toast immediately
       toast.success("Removed from wishlist");
 
       return { previousWishlist };
@@ -124,7 +123,6 @@ const useWishlist = () => {
     return wishlist.some((product) => product._id === productId);
   };
 
-  // ✅ Fire-and-forget - doesn't return promise, no await needed
   const toggleWishlist = (productId: string, product?: Product) => {
     if (isInWishlist(productId)) {
       removeFromWishlistMutation.mutate(productId);
@@ -139,7 +137,7 @@ const useWishlist = () => {
     isError,
     wishlistCount: wishlist?.length || 0,
     isInWishlist,
-    toggleWishlist, // ✅ Fire-and-forget
+    toggleWishlist,
     addToWishlist: (productId: string, product?: Product) =>
       addToWishlistMutation.mutate({ productId, product }),
     removeFromWishlist: removeFromWishlistMutation.mutate,
