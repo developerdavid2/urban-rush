@@ -10,7 +10,7 @@ const SafeScreen = ({ children }: { children: React.ReactNode }) => {
   return (
     <SafeAreaView
       className="flex-1 bg-background"
-      style={{ paddingTop: insets.top }}
+      style={{ paddingTop: insets.top - 25 }}
     >
       {children}
     </SafeAreaView>
