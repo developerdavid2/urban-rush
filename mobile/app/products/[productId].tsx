@@ -21,8 +21,12 @@ const { width } = Dimensions.get("window");
 type ButtonIcon = "cart" | "refresh" | "eye";
 
 const ProductId = () => {
-  const { productId } = useLocalSearchParams<{ productId: string }>();
+  const params = useLocalSearchParams<{ productId?: string | string[] }>();
+  const productId = Array.isArray(params.productId)
+    ? params.productId[0]
+    : params.productId;
   const { product, isError, isLoading } = useProduct(productId);
+
   const {
     addToCart,
     updateCartItem,
@@ -40,6 +44,7 @@ const ProductId = () => {
 
   // Sync quantity with cart on mount
   useEffect(() => {
+    if (!productId) return;
     if (isInCart(productId)) {
       setQuantity(getCartItemQuantity(productId));
     } else {
@@ -57,7 +62,7 @@ const ProductId = () => {
     updateCartItem({ productId: product._id, quantity });
   };
 
-  if (isLoading) return <LoadingUI />;
+  if (!productId || isLoading) return <LoadingUI />;
   if (isError || !product) return <ErrorUI />;
 
   const inStock = product.stock > 0;

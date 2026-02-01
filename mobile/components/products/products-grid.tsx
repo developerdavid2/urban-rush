@@ -39,17 +39,28 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     toggleWishlist(product._id, product);
   };
 
+  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
   const handleAddToCart = (product: Product) => {
     if (!canAddToCart(product._id, product)) return;
-
-    // Mark this product as active
     setActiveProductId(product._id);
-
     addToCart({ productId: product._id, quantity: 1 });
 
-    // Reset active state after operation (even on error)
-    setTimeout(() => setActiveProductId(null), 3000); // safety fallback
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = setTimeout(() => {
+      setActiveProductId((current) =>
+        current === product._id ? null : current
+      );
+    }, 3000); // safety fallback
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
 
   // Listen to mutation states to reset active product
   React.useEffect(() => {
