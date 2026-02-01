@@ -2,6 +2,7 @@ import useCart from "@/hooks/useCart";
 import useWishlist from "@/hooks/useWishlist";
 import { Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -20,19 +21,55 @@ interface ProductsGridProps {
 
 const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { addToCart, isInCart, canAddToCart, getCartItemQuantity } = useCart();
+  const {
+    addToCart,
+    isInCart,
+    canAddToCart,
+    getCartItemQuantity,
+    isAddingToCart,
+    isUpdatingCart,
+  } = useCart();
+
+  // Track which product is currently being added/updated (for per-button spinner)
+  const [activeProductId, setActiveProductId] = React.useState<string | null>(
+    null
+  );
 
   const handleToggleWishlist = (product: Product) => {
     toggleWishlist(product._id, product);
   };
 
+  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
   const handleAddToCart = (product: Product) => {
-    // ✅ Check if can add before attempting
-    if (!canAddToCart(product._id, product)) {
-      return;
-    }
-    addToCart(product._id, 1, product);
+    if (!canAddToCart(product._id, product)) return;
+    setActiveProductId(product._id);
+    addToCart({ productId: product._id, quantity: 1 });
+
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = setTimeout(() => {
+      setActiveProductId((current) =>
+        current === product._id ? null : current
+      );
+    }, 3000); // safety fallback
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
+
+  // Listen to mutation states to reset active product
+  React.useEffect(() => {
+    if (!isAddingToCart && !isUpdatingCart && activeProductId) {
+      setActiveProductId(null);
+    }
+  }, [isAddingToCart, isUpdatingCart, activeProductId]);
+
+  const isCartBusy = isAddingToCart || isUpdatingCart;
 
   const renderProduct = ({ item: product }: { item: Product }) => {
     const inWishlist = isInWishlist(product._id);
@@ -42,12 +79,21 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     const isOutOfStock = product.stock === 0;
     const isLowStock = product.stock > 0 && product.stock <= 5;
 
+    // Show spinner only on this product's button
+    const isThisProductBusy = activeProductId === product._id;
+
     return (
       <TouchableOpacity
         className="bg-surface rounded-3xl overflow-hidden mb-3"
         style={{ width: "48%" }}
         activeOpacity={0.8}
-        // onPress={() => router.push(`/products/${product._id}`)}
+        onPress={() =>
+          router.push({
+            pathname: "/products/[productId]",
+            params: { productId: product._id },
+          })
+        }
+        disabled={isCartBusy} // ← Entire card disabled during any cart operation
       >
         <View className="relative">
           <Image
@@ -56,7 +102,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             resizeMode="cover"
           />
 
-          {/* ✅ Stock Badge */}
+          {/* Stock Badge */}
           {isOutOfStock && (
             <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded-full">
               <Text className="text-white text-xs font-semibold">
@@ -77,6 +123,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             className="absolute top-3 right-3 bg-black/30 backdrop-blur-xl p-2 rounded-full"
             activeOpacity={0.7}
             onPress={() => handleToggleWishlist(product)}
+            disabled={isCartBusy}
           >
             <Ionicons
               name={inWishlist ? "heart" : "heart-outline"}
@@ -124,25 +171,29 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
               }`}
               activeOpacity={0.7}
               onPress={() => handleAddToCart(product)}
-              disabled={isOutOfStock || !canAdd}
+              disabled={isOutOfStock || !canAdd || isCartBusy} // ← Disable during any operation
             >
-              <Ionicons
-                name={
-                  isOutOfStock
-                    ? "close"
-                    : inCartAlready
-                      ? "checkmark"
-                      : canAdd
-                        ? "add"
-                        : "alert"
-                }
-                size={18}
-                color="black"
-              />
+              {isThisProductBusy ? ( // ← Spinner only on this product's button
+                <ActivityIndicator size="small" color="#121212" />
+              ) : (
+                <Ionicons
+                  name={
+                    isOutOfStock
+                      ? "close"
+                      : inCartAlready
+                        ? "checkmark"
+                        : canAdd
+                          ? "add"
+                          : "alert"
+                  }
+                  size={18}
+                  color="black"
+                />
+              )}
             </TouchableOpacity>
           </View>
 
-          {/* ✅ Show cart quantity if in cart */}
+          {/* Show cart quantity if in cart */}
           {inCartAlready && (
             <Text className="text-green-500 text-xs mt-1 text-center font-semibold">
               {cartQuantity} in cart
