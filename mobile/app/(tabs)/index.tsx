@@ -1,4 +1,4 @@
-import ProductsGrid from "@/components/products-grid";
+import ProductsGrid from "@/components/products/products-grid";
 import SafeScreen from "@/components/safe-screen";
 import { CATEGORIES } from "@/constants";
 import useProducts from "@/hooks/useProducts";
@@ -80,7 +80,7 @@ const ShopTabScreen = () => {
         <View className="bg-background px-6 pb-4 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <View>
-              <Text className="text-text-primary text-3xl font-bold tracking-tight">
+              <Text className="text-white text-3xl font-bold tracking-tight">
                 Shop
               </Text>
               <Text className="text-text-secondary text-sm mt-1">
@@ -102,7 +102,7 @@ const ShopTabScreen = () => {
             <TextInput
               placeholder="Search for products"
               placeholderTextColor="#666"
-              className="flex-1 ml-3 text-base text-text-primary"
+              className="flex-1 ml-3 text-base text-emerald-500"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -128,10 +128,14 @@ const ShopTabScreen = () => {
                     key={category.name}
                     onPress={() => setSelectedCategory(category.name)}
                     activeOpacity={0.5}
-                    className={`mr-3 rounded-2xl size-20 overflow-hidden items-center justify-center ${isSelected ? "bg-primary" : "bg-surface"}`}
+                    className={`mr-3 rounded-2xl size-20 overflow-hidden items-center justify-center ${isSelected ? "bg-emerald-500" : "bg-surface"}`}
                   >
                     {category.icon ? (
-                      <Ionicons name={category.icon} size={36} color="#fff" />
+                      <Ionicons
+                        name={category.icon}
+                        size={36}
+                        color={isSelected ? "#000" : "#fff"}
+                      />
                     ) : (
                       <Image
                         source={category.image}
@@ -147,7 +151,7 @@ const ShopTabScreen = () => {
 
           <View className="px-6 mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-text-primary text-lg font-bold">
+              <Text className="text-emerald-500 text-lg font-bold">
                 Products
               </Text>
               <Text className="text-text-secondary text-sm">

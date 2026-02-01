@@ -87,13 +87,26 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const addAddress = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
+    // ✅ Don't use req.user directly - fetch from database
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - User not found",
+      });
+    }
+
+    // ✅ Fetch the actual Mongoose document
+    const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+
     const {
       fullName,
       label,
@@ -103,8 +116,25 @@ export const addAddress = async (req: Request, res: Response) => {
       postalCode,
       country,
       phoneNumber,
-      isDefault,
+      isDefault = false,
     } = req.body;
+
+    // Basic server-side validation
+    if (
+      !fullName ||
+      !label ||
+      !street ||
+      !city ||
+      !state ||
+      !postalCode ||
+      !country ||
+      !phoneNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be provided",
+      });
+    }
 
     const newAddress = {
       fullName,
@@ -115,22 +145,38 @@ export const addAddress = async (req: Request, res: Response) => {
       postalCode,
       country,
       phoneNumber,
-      isDefault: isDefault || false,
+      isDefault,
     };
 
-    user.addresses.push(newAddress);
-    await user.save();
+    // If setting as default, unset others
+    if (isDefault) {
+      user.addresses.forEach((addr) => {
+        addr.isDefault = false;
+      });
+    }
 
+    user.addresses.push(newAddress);
+    await user.save(); // ✅ Now this will work!
+
+    // Return updated addresses
     res.status(201).json({
       success: true,
-      data: user,
       message: "Address added successfully",
+      data: user.addresses,
     });
-  } catch (error) {
-    console.error("Error adding address:", error);
+  } catch (error: any) {
+    console.error("Add address error:", error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Duplicate address detected",
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: error.message || "Failed to add address - server error",
     });
   }
 };
@@ -221,7 +267,20 @@ export const updateAddress = async (req: Request, res: Response) => {
 export const deleteAddress = async (req: Request, res: Response) => {
   try {
     const addressId = req.params.addressId;
-    const user = req.user;
+
+    // ✅ Get userId and fetch the Mongoose document
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - User not found",
+      });
+    }
+
+    // ✅ Fetch the actual Mongoose document
+    const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -230,24 +289,31 @@ export const deleteAddress = async (req: Request, res: Response) => {
     }
 
     if (!mongoose.isValidObjectId(addressId)) {
-      return res.status(400).json({ message: "Invalid address ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid address ID",
+      });
     }
 
     const address = user.addresses.find((a) => a._id!.toString() === addressId);
 
-    if (!address)
-      return res
-        .status(404)
-        .json({ success: false, message: "Invalid address ID" });
+    if (!address) {
+      return res.status(404).json({
+        success: false,
+        message: "Address not found",
+      });
+    }
 
     user.addresses = user.addresses.filter(
       (a) => a._id!.toString() !== addressId
     );
 
-    await user.save();
+    await user.save(); // ✅ Now this works!
+
     res.status(200).json({
       success: true,
       message: "Address deleted successfully",
+      data: user.addresses, // ✅ Return updated addresses
     });
   } catch (error) {
     console.error("Error deleting address:", error);

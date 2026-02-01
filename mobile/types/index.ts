@@ -31,14 +31,15 @@ export interface User {
 
 export interface Address {
   _id: string;
-  label: string;
   fullName: string;
-  streetAddress: string;
+  label: string;
+  street: string;
   city: string;
   state: string;
-  zipCode: string;
+  postalCode: string;
+  country: string;
   phoneNumber: string;
-  isDefault: boolean;
+  isDefault?: boolean;
 }
 
 export interface Order {
