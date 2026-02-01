@@ -122,6 +122,7 @@ export const addAddress = async (req: Request, res: Response) => {
     // Basic server-side validation
     if (
       !fullName ||
+      !label ||
       !street ||
       !city ||
       !state ||

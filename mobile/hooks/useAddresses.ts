@@ -19,7 +19,7 @@ export const useAddresses = () => {
       const { data } = await api.get<{ success: boolean; data: Address[] }>(
         "/api/v1/users/me/addresses"
       );
-      return data.data || []; // ✅ Always return array, never undefined
+      return data.data || [];
     },
   });
 
@@ -33,8 +33,9 @@ export const useAddresses = () => {
       if (!data.success) throw new Error(data.message || "Add failed");
       return data.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      refetch();
       toast.success("Address added successfully!");
     },
     onError: (error: any) => {
@@ -61,8 +62,9 @@ export const useAddresses = () => {
       );
       return data.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      refetch();
       toast.success("Address updated successfully!");
     },
     onError: (error: any) => {

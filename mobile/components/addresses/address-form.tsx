@@ -1,21 +1,20 @@
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import React from "react";
-import { Address } from "@/types";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
   AddressFormData,
   addressSchema,
 } from "@/lib/validation/address.schema";
-import { Ionicons } from "@expo/vector-icons";
+import { Address } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 interface AddressFormProps {
@@ -39,20 +38,50 @@ const AddressForm = ({
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      fullName: address?.fullName || "",
-      label: address?.label || "",
-      street: address?.street || "",
-      city: address?.city || "",
-      state: address?.state || "",
-      postalCode: address?.postalCode || "",
-      country: address?.country || "",
-      phoneNumber: address?.phoneNumber || "",
-      isDefault: address?.isDefault || false,
+      fullName: "",
+      label: "",
+      street: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+      phoneNumber: "",
+      isDefault: false,
     },
   });
+
+  // ✅ Reset form whenever address changes (including undefined -> creates fresh form)
+  useEffect(() => {
+    if (address) {
+      reset({
+        fullName: address.fullName,
+        label: address.label,
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        postalCode: address.postalCode,
+        country: address.country,
+        phoneNumber: address.phoneNumber,
+        isDefault: address.isDefault ?? false,
+      });
+    } else {
+      reset({
+        fullName: "",
+        label: "",
+        street: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "",
+        phoneNumber: "",
+        isDefault: false,
+      });
+    }
+  }, [address, reset]);
 
   const isDefault = watch("isDefault");
 
@@ -66,7 +95,7 @@ const AddressForm = ({
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 150 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
           <View className="px-6 py-4">
             {/* Label */}

@@ -28,6 +28,7 @@ const useWishlist = () => {
     isLoading,
     isError,
     refetch,
+    isFetching,
   } = useQuery({
     queryKey: ["wishlist"],
     queryFn: async () => {
@@ -141,7 +142,9 @@ const useWishlist = () => {
     addToWishlist: (productId: string, product?: Product) =>
       addToWishlistMutation.mutate({ productId, product }),
     removeFromWishlist: removeFromWishlistMutation.mutate,
+    isRemovngWishlist: removeFromWishlistMutation.isPending,
     refetch,
+    isFetching,
   };
 };
 

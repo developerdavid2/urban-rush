@@ -102,7 +102,7 @@ const ShopTabScreen = () => {
             <TextInput
               placeholder="Search for products"
               placeholderTextColor="#666"
-              className="flex-1 ml-3 text-base textemerald-500"
+              className="flex-1 ml-3 text-base text-emerald-500"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -151,7 +151,7 @@ const ShopTabScreen = () => {
 
           <View className="px-6 mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="textemerald-500 text-lg font-bold">
+              <Text className="text-emerald-500 text-lg font-bold">
                 Products
               </Text>
               <Text className="text-text-secondary text-sm">

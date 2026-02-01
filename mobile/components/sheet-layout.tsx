@@ -39,19 +39,20 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
 
     // Handle keyboard events
     useEffect(() => {
-      const keyboardWillShow = Keyboard.addListener("keyboardDidShow", () => {
-        bottomSheetRef.current?.snapToIndex(1);
+      const expandedIndex = snapPoints.length > 1 ? 1 : 0;
+      const keyboardDidShow = Keyboard.addListener("keyboardDidShow", () => {
+        bottomSheetRef.current?.snapToIndex(expandedIndex);
       });
 
-      const keyboardWillHide = Keyboard.addListener("keyboardDidHide", () => {
+      const keyboardDidHide = Keyboard.addListener("keyboardDidHide", () => {
         bottomSheetRef.current?.snapToIndex(0);
       });
 
       return () => {
-        keyboardWillShow.remove();
-        keyboardWillHide.remove();
+        keyboardDidShow.remove();
+        keyboardDidHide.remove();
       };
-    }, []);
+    }, [snapPoints]);
 
     useImperativeHandle(ref, () => ({
       open: () => bottomSheetRef.current?.snapToIndex(0),
