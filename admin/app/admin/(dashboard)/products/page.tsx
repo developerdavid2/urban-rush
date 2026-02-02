@@ -18,6 +18,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 
 const columns: Column[] = [
+  { name: "PRODUCT ID", uid: "_id", sortable: true },
   { name: "IMAGE", uid: "images" },
   { name: "NAME", uid: "name", sortable: true },
   { name: "CATEGORY", uid: "category", sortable: true },
@@ -83,6 +84,14 @@ export default function ProductsPage() {
       const cellValue = product[key];
 
       switch (columnKey) {
+        case "_id": {
+          const id = String(cellValue).slice(0, 8);
+          return (
+            <p className="font-medium text-small uppercase text-gray-300">
+              #{id}
+            </p>
+          );
+        }
         case "images":
           const firstImage = product.images?.[0];
           return firstImage ? (
@@ -205,8 +214,8 @@ export default function ProductsPage() {
           getItemKey={(product) => product._id}
           isLoading={isLoading}
           emptyMessage="No products found"
-          searchPlaceholder="Search by name or category..."
-          searchKeys={["name", "category", "price", "status"]}
+          searchPlaceholder="Search by ID, name or category..."
+          searchKeys={["_id", "name", "category", "price", "status"]}
         />
       )}
 

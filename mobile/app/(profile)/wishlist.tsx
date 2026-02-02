@@ -32,12 +32,13 @@ const Wishlist = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleAddToCart = (product: Product) => {
+    if (!product) return;
     if (!canAddToCart(product._id, product)) {
       return;
     }
 
     setLoadingProductId(product._id);
-    addToCart(product._id, 1, product);
+    addToCart({ productId: product._id, quantity: 1 });
 
     setTimeout(() => setLoadingProductId(null), 500);
   };

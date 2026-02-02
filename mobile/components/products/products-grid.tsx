@@ -3,7 +3,7 @@ import useWishlist from "@/hooks/useWishlist";
 import { Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -30,7 +30,6 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     isUpdatingCart,
   } = useCart();
 
-  // Track which product is currently being added/updated (for per-button spinner)
   const [activeProductId, setActiveProductId] = React.useState<string | null>(
     null
   );
@@ -39,9 +38,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     toggleWishlist(product._id, product);
   };
 
-  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleAddToCart = (product: Product) => {
     if (!canAddToCart(product._id, product)) return;
@@ -53,17 +50,16 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
       setActiveProductId((current) =>
         current === product._id ? null : current
       );
-    }, 3000); // safety fallback
+    }, 2000);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
   }, []);
 
-  // Listen to mutation states to reset active product
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAddingToCart && !isUpdatingCart && activeProductId) {
       setActiveProductId(null);
     }
@@ -79,7 +75,6 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
     const isOutOfStock = product.stock === 0;
     const isLowStock = product.stock > 0 && product.stock <= 5;
 
-    // Show spinner only on this product's button
     const isThisProductBusy = activeProductId === product._id;
 
     return (
@@ -93,7 +88,7 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
             params: { productId: product._id },
           })
         }
-        disabled={isCartBusy} // ← Entire card disabled during any cart operation
+        disabled={isCartBusy}
       >
         <View className="relative">
           <Image
@@ -171,9 +166,9 @@ const ProductsGrid = ({ products, isLoading, isError }: ProductsGridProps) => {
               }`}
               activeOpacity={0.7}
               onPress={() => handleAddToCart(product)}
-              disabled={isOutOfStock || !canAdd || isCartBusy} // ← Disable during any operation
+              disabled={isOutOfStock || !canAdd || isCartBusy}
             >
-              {isThisProductBusy ? ( // ← Spinner only on this product's button
+              {isThisProductBusy ? (
                 <ActivityIndicator size="small" color="#121212" />
               ) : (
                 <Ionicons

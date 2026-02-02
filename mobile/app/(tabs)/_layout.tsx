@@ -12,7 +12,7 @@ const { width } = Dimensions.get("window");
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
   const { isSignedIn, isLoaded } = useAuth();
-  const { cart } = useCart(); // ✅ Get cart count
+  const { cart } = useCart();
 
   if (!isLoaded) return null;
 
@@ -24,7 +24,7 @@ const TabsLayout = () => {
     <Tabs
       initialRouteName="index"
       screenOptions={{
-        tabBarActiveTintColor: "#1DB954",
+        tabBarActiveTintColor: "#10b981",
         tabBarInactiveTintColor: "#B3B3B3",
         tabBarStyle: {
           position: "absolute",
@@ -89,7 +89,7 @@ const TabsLayout = () => {
           tabBarBadge:
             cart?.items?.length > 0 ? cart?.items?.length : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: "#1DB954",
+            backgroundColor: "#10b981",
             color: "#000",
             fontSize: 10,
             fontWeight: "700",

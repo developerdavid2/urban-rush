@@ -15,6 +15,7 @@ import orderRouter from "./routes/order.route";
 import userRouter from "./routes/user.route";
 import reviewRouter from "./routes/review.route";
 import cartRouter from "./routes/cart.route";
+import paymentRouter from "./routes/payment.route";
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use("/api/v1/cart", cartRouter);
+app.use("/api/v1/payment", paymentRouter);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

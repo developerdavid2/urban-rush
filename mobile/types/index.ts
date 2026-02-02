@@ -1,3 +1,5 @@
+// types/index.ts
+
 export interface Product {
   _id: string;
   slug: string;
@@ -87,17 +89,17 @@ export interface Review {
 
 export interface CartItem {
   _id: string;
-  productId: Product;
+  product: Product;
   quantity: number;
 }
 
 export interface Cart {
-  _id: string;
-  userId: string;
-  clerkId: string;
+  _id?: string;
+  userId?: string;
+  clerkId?: string;
   items: CartItem[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type SecurityOption = {

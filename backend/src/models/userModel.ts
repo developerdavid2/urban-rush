@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema<UserDocument>(
       type: String,
       required: false,
     },
+    stripeCustomerId: {
+      type: String,
+      default: "",
+    },
     profileImageUrl: {
       type: String,
       default: "",

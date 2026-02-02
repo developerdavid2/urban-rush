@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
 import mongoose from "mongoose";
+import { AnyAaaaRecord } from "node:dns";
 
 export const getCart = async (req: Request, res: Response) => {
   try {
@@ -19,9 +20,20 @@ export const getCart = async (req: Request, res: Response) => {
       });
     }
 
+    const transformedCart = {
+      ...cart.toObject(),
+      items: cart.items
+        .filter((item: any) => item.productId !== null) // ✅ Remove items with deleted products
+        .map((item: any) => ({
+          _id: item._id,
+          product: item.productId,
+          quantity: item.quantity,
+        })),
+    };
+
     res.status(200).json({
       success: true,
-      data: cart,
+      data: transformedCart,
     });
   } catch (error) {
     console.error("Error fetching cart:", error);

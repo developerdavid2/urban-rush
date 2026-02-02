@@ -18,6 +18,7 @@ export interface UserDocument extends Document {
   email: string;
   name?: string;
   profileImageUrl?: string;
+  stripeCustomerId?: string;
   addresses: Address[];
   wishlist: mongoose.Types.ObjectId[];
   role: "customer" | "admin";

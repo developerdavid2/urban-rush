@@ -19,6 +19,7 @@ export type User = {
   email: string;
   name?: string;
   profileImageUrl?: string;
+  stripeCustomerId?: string;
   addresses: Address[];
   wishlist: Product[];
   role: "customer" | "admin";

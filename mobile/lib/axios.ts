@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import axios from "axios";
 import { useEffect, useRef } from "react";
 
-const API_URL = "https://a1ab8f2edd84.ngrok-free.app";
+const API_URL = " https://bedd5e4b7b2f.ngrok-free.app";
 
 const axiosClient = axios.create({
   baseURL: API_URL,
