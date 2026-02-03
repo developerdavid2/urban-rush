@@ -6,8 +6,8 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toasts } from "@backpackapp-io/react-native-toast";
-import { View } from "react-native";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { StripeProvider } from "@stripe/stripe-react-native";
+import { PortalProvider } from "@gorhom/portal"; // ✅ ADD THIS
 
 const queryClient = new QueryClient();
 
@@ -25,9 +25,12 @@ export default function RootLayout() {
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
         <ClerkLoaded>
           <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <BottomSheetModalProvider>
-                <View style={{ flex: 1, backgroundColor: "#121212" }}>
+            <StripeProvider
+              publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+            >
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                {/* ✅ WRAP WITH PORTAL PROVIDER */}
+                <PortalProvider>
                   <Stack
                     screenOptions={{
                       headerShown: false,
@@ -48,9 +51,9 @@ export default function RootLayout() {
                       },
                     }}
                   />
-                </View>
-              </BottomSheetModalProvider>
-            </GestureHandlerRootView>
+                </PortalProvider>
+              </GestureHandlerRootView>
+            </StripeProvider>
           </QueryClientProvider>
         </ClerkLoaded>
       </ClerkProvider>

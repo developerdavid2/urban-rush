@@ -5,10 +5,10 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import SafeScreen from "@/components/safe-screen";
 import useCart from "@/hooks/useCart";
-import { ScrollView } from "react-native-gesture-handler";
+import { RefreshControl, ScrollView } from "react-native-gesture-handler";
 import { useAddresses } from "@/hooks/useAddresses";
 import { Address, Product } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,13 +16,25 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { cn } from "@/lib/utils";
 import OrderSummary from "@/components/orders/order-summary";
+import CartAddressSelectionModal from "@/components/addresses/address-cart-selection-modal";
+import { useAxiosApi } from "@/lib/axios";
+
+import { useStripe } from "@stripe/stripe-react-native";
 
 const CartTabScreen = () => {
+  const addressSheetRef = useRef<any>(null);
+  const [localQuantities, setLocalQuantities] = useState<
+    Record<string, number>
+  >({});
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const api = useAxiosApi();
   const {
     cart,
     cartTotal,
-    addToCart,
-    isAddingToCart,
     isError,
     isLoading,
     isRemovingFromCart,
@@ -34,14 +46,9 @@ const CartTabScreen = () => {
     clearCart,
   } = useCart();
 
-  const { addresses } = useAddresses();
+  const { addresses, refetch } = useAddresses();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-  // Local state for each item's quantity + tracking which items changed
-  const [localQuantities, setLocalQuantities] = useState<
-    Record<string, number>
-  >({});
-  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const cartItems = cart?.items;
   const subtotal = cartTotal;
   const shipping = 10.0;
@@ -51,7 +58,8 @@ const CartTabScreen = () => {
   // Sync local quantities when cart data loads/changes
   useEffect(() => {
     const initialQuantities: Record<string, number> = {};
-    cartItems.forEach((item) => {
+    cartItems?.forEach((item) => {
+      if (!item.product?._id) return;
       initialQuantities[item.product._id] = item.quantity;
     });
     setLocalQuantities(initialQuantities);
@@ -73,7 +81,6 @@ const CartTabScreen = () => {
     updateCartItem({ productId, quantity: newQuantity });
   };
 
-  // Reset updating state after mutation finishes
   useEffect(() => {
     if (!isUpdatingCart && updatingItemId) {
       setUpdatingItemId(null);
@@ -91,8 +98,9 @@ const CartTabScreen = () => {
     ]);
   };
 
+  // Open address selection sheet
   const handleCheckout = () => {
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       Alert.alert("Empty Cart", "Your cart is empty", [{ text: "OK" }]);
       return;
     }
@@ -101,20 +109,93 @@ const CartTabScreen = () => {
       Alert.alert(
         "No Address",
         "Please add a shipping address in your profile",
-        [{ text: "OK" }]
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Add Address",
+            onPress: () => router.push("/addresses"),
+          },
+        ]
       );
       return;
     }
 
-    // Proceed to payment or address selection
-    // ... your payment logic here
+    const defaultAddress = addresses.find((addr) => addr.isDefault);
+    if (defaultAddress) {
+      setSelectedAddress(defaultAddress);
+    }
+
+    addressSheetRef.current?.open();
+  };
+
+  const handleProceedToPayment = async (address: Address) => {
+    setPaymentLoading(true);
+    try {
+      setPaymentLoading(true);
+      // create payment with cart items and shipping address
+
+      const { data } = await api.post("/api/v1/payment/create-intent", {
+        cartItems,
+        shippingAddress: {
+          fullName: selectedAddress?.fullName,
+          streetAddress: selectedAddress?.street,
+          city: selectedAddress?.city,
+          country: selectedAddress?.country,
+          state: selectedAddress?.state,
+          postalCode: selectedAddress?.postalCode,
+          phoneNumber: selectedAddress?.phoneNumber,
+        },
+      });
+
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: data.clientSecret,
+        merchantDisplayName: "Urban Rush",
+      });
+
+      if (initError) {
+        Alert.alert("Error", initError.message);
+        setPaymentLoading(false);
+        return;
+      }
+      //present the payment sheet
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        Alert.alert("Paymenr cancelled", presentError.message);
+      } else {
+        Alert.alert(
+          "Success",
+          "Your payment was successful! Your order is being processed",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                // router.push("/orders");
+              },
+            },
+          ]
+        );
+        addressSheetRef.current?.close();
+        clearCart();
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      Alert.alert("Error", "Failed to process payment");
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   if (isLoading) return <LoadingUI />;
   if (isError || !cart) return <ErrorUI />;
-  if (cartItems.length === 0) return <EmptyUI />;
+  if (!cartItems || cartItems.length === 0) return <EmptyUI />;
 
-  const isCartBusy = isAddingToCart || isUpdatingCart || isRemovingFromCart;
+  const isCartBusy = isUpdatingCart || isRemovingFromCart;
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   return (
     <SafeScreen>
@@ -126,10 +207,19 @@ const CartTabScreen = () => {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 240 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#10b981"
+          />
+        }
       >
         <View className="px-6 gap-y-4">
           {cartItems.map((item) => {
             const product = item.product;
+            if (!product) return null;
+
             const localQty = localQuantities[product._id] ?? item.quantity;
             const hasChanged = hasQuantityChanged(product._id, localQty);
             const isThisItemUpdating = updatingItemId === product._id;
@@ -148,8 +238,6 @@ const CartTabScreen = () => {
                 disabled={isCartBusy}
               >
                 <View className="p-4 flex-col">
-                  {/* Image */}
-
                   <View className="flex-row">
                     <View className="relative">
                       <Image
@@ -184,12 +272,11 @@ const CartTabScreen = () => {
                         </View>
                       </View>
 
-                      {/* Quantity Controls */}
                       <View className="flex-row justify-between items-center">
                         <View className="mt-4">
                           <View className="flex-row items-center">
                             <TouchableOpacity
-                              className="bg-surface rounded-full w-10 h-10 items-center justify-center"
+                              className="bg-background-lighter rounded-full w-10 h-10 items-center justify-center"
                               onPress={() =>
                                 handleQuantityChange(product._id, localQty - 1)
                               }
@@ -235,14 +322,13 @@ const CartTabScreen = () => {
                                   isThisItemUpdating ||
                                   isCartBusy
                                     ? "#444"
-                                    : "#FFFFFF"
+                                    : "#121212"
                                 }
                               />
                             </TouchableOpacity>
                           </View>
                         </View>
 
-                        {/* Remove Button */}
                         <TouchableOpacity
                           className="mt-4 p-2"
                           onPress={() =>
@@ -260,7 +346,6 @@ const CartTabScreen = () => {
                     </View>
                   </View>
 
-                  {/* Update Button - only shows when changed */}
                   {hasChanged && (
                     <TouchableOpacity
                       className={cn(
@@ -272,7 +357,7 @@ const CartTabScreen = () => {
                     >
                       {isThisItemUpdating ? (
                         <>
-                          <ActivityIndicator size="small" color="#fff" />
+                          <ActivityIndicator size="small" color="#F59E0B" />
                           <Text className="text-[#F59E0B] font-bold ml-2">
                             Updating...
                           </Text>
@@ -289,6 +374,7 @@ const CartTabScreen = () => {
             );
           })}
         </View>
+
         <OrderSummary
           subtotal={subtotal}
           shipping={shipping}
@@ -301,7 +387,7 @@ const CartTabScreen = () => {
       <View className="absolute bottom-20 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
-            <Ionicons name="cart" size={20} color="#1DB954" />
+            <Ionicons name="cart" size={20} color="#10b981" />
             <Text className="text-text-secondary ml-2">
               {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
             </Text>
@@ -319,20 +405,24 @@ const CartTabScreen = () => {
           disabled={isCartBusy || cartItems.length === 0}
           activeOpacity={0.7}
         >
-          <View className="py-2 flex-row items-center justify-center">
-            {paymentLoading ? (
-              <ActivityIndicator size="small" color="#121212" />
-            ) : (
-              <>
-                <Text className="text-background font-bold text-lg mr-2">
-                  Checkout
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#121212" />
-              </>
-            )}
+          <View className="flex-row items-center justify-center">
+            <Text className="text-background font-bold text-lg mr-2">
+              Checkout
+            </Text>
+            <Ionicons name="arrow-forward" size={20} color="#121212" />
           </View>
         </TouchableOpacity>
       </View>
+
+      {/*  Address Selection Sheet */}
+      <CartAddressSelectionModal
+        ref={addressSheetRef}
+        selectedAddress={selectedAddress}
+        onSelectAddress={setSelectedAddress}
+        onProceed={handleProceedToPayment}
+        isProcessing={paymentLoading}
+        onClose={() => setSelectedAddress(null)}
+      />
     </SafeScreen>
   );
 };

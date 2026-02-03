@@ -5,6 +5,7 @@ import * as paymentController from "../controllers/paymentController";
 
 const router = Router();
 
+router.post("/webhook", paymentController.handleWebhook);
 router.use(authMiddleware.protect);
 router.post("/create-intent", paymentController.createPaymentIntent);
 

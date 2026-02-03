@@ -1,10 +1,16 @@
+import SheetLayout from "@/components/sheet-layout";
 import {
   AddressFormData,
   addressSchema,
 } from "@/lib/validation/address.schema";
 import { Address } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -15,7 +21,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 
 interface AddressFormProps {
   address?: Address;
@@ -24,52 +29,26 @@ interface AddressFormProps {
   onClose: () => void;
 }
 
-const AddressForm = ({
-  address,
-  onSubmit,
-  isSubmitting,
-  onClose,
-}: AddressFormProps) => {
-  const isEditMode = !!address;
+export interface AddressFormRef {
+  open: () => void;
+  close: () => void;
+}
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue,
-    reset,
-  } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      fullName: "",
-      label: "",
-      street: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "",
-      phoneNumber: "",
-      isDefault: false,
-    },
-  });
+const AddressForm = forwardRef<AddressFormRef, AddressFormProps>(
+  ({ address, onSubmit, isSubmitting, onClose }, ref) => {
+    const sheetRef = useRef<any>(null);
+    const isEditMode = !!address;
 
-  // ✅ Reset form whenever address changes (including undefined -> creates fresh form)
-  useEffect(() => {
-    if (address) {
-      reset({
-        fullName: address.fullName,
-        label: address.label,
-        street: address.street,
-        city: address.city,
-        state: address.state,
-        postalCode: address.postalCode,
-        country: address.country,
-        phoneNumber: address.phoneNumber,
-        isDefault: address.isDefault ?? false,
-      });
-    } else {
-      reset({
+    const {
+      control,
+      handleSubmit,
+      formState: { errors },
+      watch,
+      setValue,
+      reset,
+    } = useForm<AddressFormData>({
+      resolver: zodResolver(addressSchema),
+      defaultValues: {
         fullName: "",
         label: "",
         street: "",
@@ -79,25 +58,83 @@ const AddressForm = ({
         country: "",
         phoneNumber: "",
         isDefault: false,
-      });
-    }
-  }, [address, reset]);
+      },
+    });
 
-  const isDefault = watch("isDefault");
+    useEffect(() => {
+      if (address) {
+        reset({
+          fullName: address.fullName,
+          label: address.label,
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+          phoneNumber: address.phoneNumber,
+          isDefault: address.isDefault ?? false,
+        });
+      } else {
+        reset({
+          fullName: "",
+          label: "",
+          street: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: "",
+          phoneNumber: "",
+          isDefault: false,
+        });
+      }
+    }, [address, reset]);
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={150}
-    >
-      <View className="flex-1 bg-background">
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+    useImperativeHandle(ref, () => ({
+      open: () => sheetRef.current?.open(),
+      close: () => sheetRef.current?.close(),
+    }));
+
+    const isDefault = watch("isDefault");
+
+    // ✅ Submit button as footer
+    const footer = (
+      <TouchableOpacity
+        className={`rounded-xl py-4 items-center ${
+          isSubmitting ? "bg-primary/50" : "bg-primary"
+        }`}
+        onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
+        activeOpacity={0.8}
+      >
+        {isSubmitting ? (
+          <View className="flex-row items-center">
+            <ActivityIndicator size="small" color="#000" />
+            <Text className="text-background font-bold text-base ml-2">
+              {isEditMode ? "Updating..." : "Adding..."}
+            </Text>
+          </View>
+        ) : (
+          <Text className="text-background font-bold text-base">
+            {isEditMode ? "Update Address" : "Add Address"}
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
+
+    return (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={150}
+      >
+        <SheetLayout
+          ref={sheetRef}
+          title={isEditMode ? "Edit Address" : "Add New Address"}
+          snapPoints={["65%", "95%"]}
+          onClose={onClose}
+          footer={footer}
         >
-          <View className="px-6 py-4">
+          <View className="flex-1">
             {/* Label */}
             <View className="mb-4">
               <Text className="text-text-primary font-semibold mb-2">
@@ -329,35 +366,12 @@ const AddressForm = ({
               </View>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </SheetLayout>
+      </KeyboardAvoidingView>
+    );
+  }
+);
 
-        {/* Submit Button - Fixed at Bottom */}
-        <View className="absolute bottom-0 left-0 right-0 bg-background px-6 py-4 border-t border-surface">
-          <TouchableOpacity
-            className={`rounded-xl py-4 items-center ${
-              isSubmitting ? "bg-primary/50" : "bg-primary"
-            }`}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            activeOpacity={0.8}
-          >
-            {isSubmitting ? (
-              <View className="flex-row items-center">
-                <ActivityIndicator size="small" color="#000" />
-                <Text className="text-background font-bold text-base ml-2">
-                  {isEditMode ? "Updating..." : "Adding..."}
-                </Text>
-              </View>
-            ) : (
-              <Text className="text-background font-bold text-base">
-                {isEditMode ? "Update Address" : "Add Address"}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
-  );
-};
+AddressForm.displayName = "AddressForm";
 
 export default AddressForm;

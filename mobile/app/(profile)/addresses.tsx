@@ -13,12 +13,13 @@ import { useAddresses } from "@/hooks/useAddresses";
 import { Ionicons } from "@expo/vector-icons";
 import { Address } from "@/types";
 import { AddressFormData } from "@/lib/validation/address.schema";
-import SheetLayout from "@/components/sheet-layout";
-import AddressForm from "@/components/addresses/address-form";
+import AddressForm, {
+  AddressFormRef,
+} from "@/components/addresses/address-form";
 import { router } from "expo-router";
 
 const Addresses = () => {
-  const sheetRef = useRef<any>(null);
+  const formRef = useRef<AddressFormRef>(null);
   const [editingAddress, setEditingAddress] = useState<Address | undefined>();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -40,11 +41,11 @@ const Addresses = () => {
 
   const openSheet = useCallback((address?: Address) => {
     setEditingAddress(address);
-    sheetRef.current?.open();
+    formRef.current?.open();
   }, []);
 
   const closeSheet = useCallback(() => {
-    sheetRef.current?.close();
+    formRef.current?.close();
     setEditingAddress(undefined);
   }, []);
 
@@ -256,7 +257,6 @@ const Addresses = () => {
           )}
         </ScrollView>
 
-        {/* ✅ FIXED FOOTER - Only show if there are addresses */}
         {addresses.length > 0 && (
           <View className="absolute bottom-0 left-0 right-0 bg-background px-6 py-4 border-t border-surface">
             <TouchableOpacity
@@ -271,20 +271,14 @@ const Addresses = () => {
         )}
       </View>
 
-      {/* Modal Sheet */}
-      <SheetLayout
-        ref={sheetRef}
-        title={editingAddress ? "Edit Address" : "Add New Address"}
-        snapPoints={["65%", "95%"]}
+      {/* Address Form with built-in SheetLayout */}
+      <AddressForm
+        ref={formRef}
+        address={editingAddress}
+        onSubmit={handleSubmit}
+        isSubmitting={isMutating}
         onClose={() => setEditingAddress(undefined)}
-      >
-        <AddressForm
-          address={editingAddress}
-          onSubmit={handleSubmit}
-          isSubmitting={isMutating}
-          onClose={closeSheet}
-        />
-      </SheetLayout>
+      />
     </SafeScreen>
   );
 };

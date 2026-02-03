@@ -87,7 +87,6 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const addAddress = async (req: Request, res: Response) => {
   try {
-    // ✅ Don't use req.user directly - fetch from database
     const userId = req.user?._id;
 
     if (!userId) {
@@ -97,7 +96,6 @@ export const addAddress = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ Fetch the actual Mongoose document
     const user = await User.findById(userId);
 
     if (!user) {
@@ -156,7 +154,7 @@ export const addAddress = async (req: Request, res: Response) => {
     }
 
     user.addresses.push(newAddress);
-    await user.save(); // ✅ Now this will work!
+    await user.save();
 
     // Return updated addresses
     res.status(201).json({
@@ -268,7 +266,6 @@ export const deleteAddress = async (req: Request, res: Response) => {
   try {
     const addressId = req.params.addressId;
 
-    // ✅ Get userId and fetch the Mongoose document
     const userId = req.user?._id;
 
     if (!userId) {
@@ -278,7 +275,6 @@ export const deleteAddress = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ Fetch the actual Mongoose document
     const user = await User.findById(userId);
 
     if (!user) {
@@ -308,12 +304,12 @@ export const deleteAddress = async (req: Request, res: Response) => {
       (a) => a._id!.toString() !== addressId
     );
 
-    await user.save(); // ✅ Now this works!
+    await user.save();
 
     res.status(200).json({
       success: true,
       message: "Address deleted successfully",
-      data: user.addresses, // ✅ Return updated addresses
+      data: user.addresses,
     });
   } catch (error) {
     console.error("Error deleting address:", error);
@@ -385,7 +381,6 @@ export const addToWishlist = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ Fetch user with populated wishlist
     const updatedUser = await User.findById(user._id).populate("wishlist");
 
     res.status(200).json({

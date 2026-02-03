@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import axios from "axios";
 import { useEffect, useRef } from "react";
 
-const API_URL = " https://bedd5e4b7b2f.ngrok-free.app";
+const API_URL = "https://816221337be7.ngrok-free.app";
 
 const axiosClient = axios.create({
   baseURL: API_URL,
@@ -31,7 +31,7 @@ export const useAxiosApi = () => {
             console.warn("⚠️ Axios: No Clerk token available");
           }
         } catch (error) {
-          console.error("❌ Axios: Failed to get token:", error);
+          console.error("Axios: Failed to get token:", error);
         }
 
         return config;

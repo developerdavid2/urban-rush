@@ -52,7 +52,7 @@ export const PROFILE_MENU_ITEMS = [
   },
 ] as const;
 
-// ✅ Export as FUNCTIONS that accept state values
+// Export as FUNCTIONS that accept state values
 export const getSecuritySettings = (
   twoFactorEnabled: boolean,
   biometricEnabled: boolean

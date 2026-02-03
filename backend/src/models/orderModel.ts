@@ -55,6 +55,7 @@ const orderSchema = new Schema<OrderDocument>(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
+    paymentIntentId: { type: String, unique: true, sparse: true },
     deliveredAt: Date,
     cancelledAt: Date,
     shippedAt: Date,
@@ -63,7 +64,6 @@ const orderSchema = new Schema<OrderDocument>(
     timestamps: true,
   }
 );
-
 const Order = model<OrderDocument>("Order", orderSchema);
 
 export default Order;

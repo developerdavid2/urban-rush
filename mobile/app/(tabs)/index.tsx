@@ -66,7 +66,7 @@ const ShopTabScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]} // ✅ Makes the first child (header) sticky
+        stickyHeaderIndices={[0]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -76,7 +76,6 @@ const ShopTabScreen = () => {
           />
         }
       >
-        {/* ✅ STICKY HEADER - Now inside ScrollView but stays fixed */}
         <View className="bg-background px-6 pb-4 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <View>
@@ -109,7 +108,6 @@ const ShopTabScreen = () => {
           </View>
         </View>
 
-        {/* ✅ SCROLLABLE CONTENT */}
         <View>
           {/* CATEGORY FILTER */}
           <View className="mb-6 max-w-[370px] mx-auto">

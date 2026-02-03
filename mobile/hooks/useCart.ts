@@ -22,7 +22,7 @@ const useCart = () => {
     queryKey: ["cart"],
     queryFn: async () => {
       const { data } = await api.get<CartResponse>("/api/v1/cart");
-      // ✅ Always return a Cart with at least empty items array
+      // Always return a Cart with at least empty items array
       return data.data || { items: [] };
     },
   });
@@ -107,8 +107,6 @@ const useCart = () => {
       toast.error(message);
     },
   });
-
-  // ✅ HELPER FUNCTIONS - Clean & Readable
 
   /**
    * Check if a product is in the cart

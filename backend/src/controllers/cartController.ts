@@ -23,7 +23,7 @@ export const getCart = async (req: Request, res: Response) => {
     const transformedCart = {
       ...cart.toObject(),
       items: cart.items
-        .filter((item: any) => item.productId !== null) // ✅ Remove items with deleted products
+        .filter((item: any) => item.productId !== null)
         .map((item: any) => ({
           _id: item._id,
           product: item.productId,

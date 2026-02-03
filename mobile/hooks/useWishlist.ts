@@ -64,7 +64,7 @@ const useWishlist = () => {
         product || ({ _id: productId } as Product),
       ]);
 
-      // ✅ Show success toast immediately
+      //  Show success toast immediately
       toast.success("Added to wishlist!");
 
       return { previousWishlist };
