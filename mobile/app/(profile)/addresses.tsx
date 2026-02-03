@@ -256,7 +256,6 @@ const Addresses = () => {
           )}
         </ScrollView>
 
-        {/* ✅ FIXED FOOTER - Only show if there are addresses */}
         {addresses.length > 0 && (
           <View className="absolute bottom-0 left-0 right-0 bg-background px-6 py-4 border-t border-surface">
             <TouchableOpacity

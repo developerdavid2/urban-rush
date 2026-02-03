@@ -19,10 +19,10 @@ axiosClient.interceptors.request.use(
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         } else {
-          console.warn("⚠️ Axios: No Clerk token available");
+          console.warn("Axios: No Clerk token available");
         }
       } catch (error) {
-        console.error("❌ Axios: Failed to get token:", error);
+        console.error("Axios: Failed to get token:", error);
       }
     }
 
@@ -39,7 +39,7 @@ axiosClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error("❌ Axios Error:", {
+    console.error("Axios Error:", {
       status: error.response?.status,
       url: error.config?.url,
       message: error.message,

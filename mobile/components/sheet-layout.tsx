@@ -1,4 +1,3 @@
-// components/ui/SheetLayout.tsx
 import React, {
   ReactNode,
   useCallback,
@@ -11,46 +10,51 @@ import React, {
 import { View, Text, TouchableOpacity, Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 
 interface SheetLayoutProps {
   title: string;
   children: ReactNode;
+  footer?: ReactNode;
   snapPoints?: (string | number)[];
   onClose?: () => void;
 }
 
 const SheetLayout = forwardRef<any, SheetLayoutProps>(
-  (
-    {
-      title,
-      children,
-      snapPoints: customSnapPoints,
-
-      onClose,
-    },
-    ref
-  ) => {
+  ({ title, children, footer, snapPoints: customSnapPoints, onClose }, ref) => {
     const bottomSheetRef = useRef<BottomSheet>(null);
 
     const snapPoints = useMemo(
-      () => customSnapPoints || ["50%", "85%"], // default to almost full screen
+      () => customSnapPoints || ["50%", "85%"],
       [customSnapPoints]
     );
 
-    // Handle keyboard events
+    const footerMargin = useSharedValue(80);
+
+    const footerStyle = useAnimatedStyle(() => {
+      return {
+        marginBottom: footerMargin.value,
+      };
+    });
+
     useEffect(() => {
       const expandedIndex = snapPoints.length > 1 ? 1 : 0;
-      const keyboardDidShow = Keyboard.addListener("keyboardDidShow", () => {
+
+      const showSub = Keyboard.addListener("keyboardDidShow", () => {
         bottomSheetRef.current?.snapToIndex(expandedIndex);
       });
 
-      const keyboardDidHide = Keyboard.addListener("keyboardDidHide", () => {
+      const hideSub = Keyboard.addListener("keyboardDidHide", () => {
         bottomSheetRef.current?.snapToIndex(0);
       });
 
       return () => {
-        keyboardDidShow.remove();
-        keyboardDidHide.remove();
+        showSub.remove();
+        hideSub.remove();
       };
     }, [snapPoints]);
 
@@ -67,11 +71,23 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
       onClose?.();
     }, [onClose]);
 
+    const handleSheetChange = useCallback(
+      (index: number) => {
+        if (index === 0) {
+          footerMargin.value = withTiming(250, { duration: 300 });
+        } else if (index === 1) {
+          footerMargin.value = withTiming(80, { duration: 300 });
+        }
+      },
+      [footerMargin]
+    );
+
     return (
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
         snapPoints={snapPoints}
+        onChange={handleSheetChange}
         enableDynamicSizing={false}
         enablePanDownToClose={false}
         enableOverDrag={false}
@@ -92,7 +108,6 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
         onClose={onClose}
       >
         <View className="flex-1 bg-background">
-          {/* Single Header */}
           <View className="flex-row items-center justify-between px-6 py-5 border-b border-surface">
             <Text className="text-text-primary text-xl font-bold">{title}</Text>
             <TouchableOpacity onPress={handleClose}>
@@ -100,14 +115,25 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
             </TouchableOpacity>
           </View>
 
-          {/* Scrollable content */}
           <BottomSheetScrollView
-            contentContainerStyle={{ padding: 20 }}
-            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              padding: 20,
+              paddingBottom: footer ? 140 : 20,
+            }}
           >
             {children}
           </BottomSheetScrollView>
+
+          {footer && (
+            <Animated.View
+              style={footerStyle}
+              className="border-t border-surface bg-background px-6 py-4"
+            >
+              {footer}
+            </Animated.View>
+          )}
         </View>
       </BottomSheet>
     );
@@ -115,5 +141,4 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
 );
 
 SheetLayout.displayName = "SheetLayout";
-
 export default SheetLayout;

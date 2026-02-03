@@ -17,6 +17,7 @@ export interface OrderDocument extends Document {
   shippingAddress: Address;
   paymentStatus: "pending" | "paid" | "failed";
   orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentIntentId?: string;
   deliveredAt?: Date;
   cancelledAt?: Date;
   shippedAt?: Date;

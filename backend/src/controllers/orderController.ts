@@ -53,7 +53,6 @@ export const getOrderById = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
-    console.log("Error getting order", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch order",

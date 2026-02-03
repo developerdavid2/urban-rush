@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, Dimensions, Platform } from "react-native";
 import { BlurView } from "expo-blur";
-import useCart from "@/hooks/useCart"; // ✅ Import the hook
+import useCart from "@/hooks/useCart";
 
 const { width } = Dimensions.get("window");
 

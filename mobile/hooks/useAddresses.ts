@@ -21,6 +21,8 @@ export const useAddresses = () => {
       );
       return data.data || [];
     },
+    staleTime: 0,
+    refetchIntervalInBackground: true,
   });
 
   const addAddressMutation = useMutation({
@@ -93,7 +95,7 @@ export const useAddresses = () => {
   });
 
   return {
-    addresses: addresses || [], // ✅ Fallback to empty array
+    addresses: addresses || [],
     isLoading,
     isError,
     isFetching,

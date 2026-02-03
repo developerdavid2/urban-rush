@@ -44,6 +44,19 @@ app.use(
   })
 );
 
+// // apply raw body parser conditionally only to webhook endpoint
+// app.use(
+//   "/api/v1/payment",
+//   (req, res, next) => {
+//     if (req.originalUrl === "/api/v1/payment/webhook") {
+//       express.raw({ type: "application/json" })(req, res, next);
+//     } else {
+//       express.json(); // parse json for non-webhook routes
+//     }
+//   },
+//   paymentRouter
+// );
+
 app.use(express.json());
 app.use(
   clerkMiddleware({
