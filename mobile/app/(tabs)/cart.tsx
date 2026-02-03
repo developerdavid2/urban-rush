@@ -19,10 +19,7 @@ import OrderSummary from "@/components/orders/order-summary";
 import CartAddressSelectionModal from "@/components/addresses/address-cart-selection-modal";
 import { useAxiosApi } from "@/lib/axios";
 
-import {
-  initPaymentSheet,
-  presentPaymentSheet,
-} from "@stripe/stripe-react-native";
+import { useStripe } from "@stripe/stripe-react-native";
 
 const CartTabScreen = () => {
   const addressSheetRef = useRef<any>(null);
@@ -50,6 +47,7 @@ const CartTabScreen = () => {
   } = useCart();
 
   const { addresses, refetch } = useAddresses();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const cartItems = cart?.items;
   const subtotal = cartTotal;

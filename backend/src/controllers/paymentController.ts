@@ -122,10 +122,16 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     try {
       await session.withTransaction(async () => {
-        const { userId, cartId, totalPrice } = paymentIntent.metadata;
+        const { userId, cartId, totalPrice, shippingAddress } =
+          paymentIntent.metadata;
 
         if (!userId || !cartId) {
           throw new Error("Missing userId or cartId in metadata");
+        }
+
+        if (!shippingAddress) {
+          console.error("No shipping address in metadata");
+          return res.json({ received: true });
         }
 
         // Prevent duplicate order
@@ -194,7 +200,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
               clerkId: paymentIntent.metadata.clerkId || "",
               items: orderItems,
               totalAmount: parseFloat(totalPrice || "0"),
-              shippingAddress: {}, // ← fill later
+              shippingAddress: JSON.parse(shippingAddress),
               paymentStatus: "paid",
               orderStatus: "pending",
               paymentIntentId: paymentIntent.id,

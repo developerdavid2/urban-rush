@@ -1,10 +1,11 @@
+import SheetLayout from "@/components/sheet-layout";
 import { useAddresses } from "@/hooks/useAddresses";
 import { Address } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { forwardRef } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import SheetLayout from "@/components/sheet-layout";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { router } from "expo-router";
+import { forwardRef } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface CartAddressSelectionModalProps {
   onProceed: (address: Address) => void;
@@ -28,7 +29,8 @@ const CartAddressSelectionModal = forwardRef<
       <SheetLayout
         ref={ref}
         title="Select Shipping Address"
-        snapPoints={["75%", "95%"]}
+        snapPoints={["50%", "80%"]}
+        bottomInset={0} // ✅ Set to 0 to cover entire screen
         onClose={onClose}
         footer={
           addresses.length > 0 && (

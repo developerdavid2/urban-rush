@@ -1,0 +1,29 @@
+# Node modules are included automatically, no need to upload all
+node_modules/
+
+# Development tools & logs
+.expo/
+.expo-shared/
+.vscode/
+.idea/
+*.log
+
+# Build cache
+.cache/
+dist/
+build/
+
+# Test files
+*.spec.*
+*.test.*
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.zip
+*.bak
+.DS_Store
+Thumbs.db

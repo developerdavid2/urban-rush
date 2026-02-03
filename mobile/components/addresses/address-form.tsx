@@ -4,18 +4,22 @@ import {
 } from "@/lib/validation/address.schema";
 import { Address } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import React, {
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import SheetLayout from "@/components/sheet-layout";
 
 interface AddressFormProps {
   address?: Address;
@@ -24,51 +28,26 @@ interface AddressFormProps {
   onClose: () => void;
 }
 
-const AddressForm = ({
-  address,
-  onSubmit,
-  isSubmitting,
-  onClose,
-}: AddressFormProps) => {
-  const isEditMode = !!address;
+export interface AddressFormRef {
+  open: () => void;
+  close: () => void;
+}
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue,
-    reset,
-  } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      fullName: "",
-      label: "",
-      street: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "",
-      phoneNumber: "",
-      isDefault: false,
-    },
-  });
+const AddressForm = forwardRef<AddressFormRef, AddressFormProps>(
+  ({ address, onSubmit, isSubmitting, onClose }, ref) => {
+    const sheetRef = useRef<any>(null);
+    const isEditMode = !!address;
 
-  useEffect(() => {
-    if (address) {
-      reset({
-        fullName: address.fullName,
-        label: address.label,
-        street: address.street,
-        city: address.city,
-        state: address.state,
-        postalCode: address.postalCode,
-        country: address.country,
-        phoneNumber: address.phoneNumber,
-        isDefault: address.isDefault ?? false,
-      });
-    } else {
-      reset({
+    const {
+      control,
+      handleSubmit,
+      formState: { errors },
+      watch,
+      setValue,
+      reset,
+    } = useForm<AddressFormData>({
+      resolver: zodResolver(addressSchema),
+      defaultValues: {
         fullName: "",
         label: "",
         street: "",
@@ -78,285 +57,310 @@ const AddressForm = ({
         country: "",
         phoneNumber: "",
         isDefault: false,
-      });
-    }
-  }, [address, reset]);
+      },
+    });
 
-  const isDefault = watch("isDefault");
+    useEffect(() => {
+      if (address) {
+        reset({
+          fullName: address.fullName,
+          label: address.label,
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+          phoneNumber: address.phoneNumber,
+          isDefault: address.isDefault ?? false,
+        });
+      } else {
+        reset({
+          fullName: "",
+          label: "",
+          street: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: "",
+          phoneNumber: "",
+          isDefault: false,
+        });
+      }
+    }, [address, reset]);
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={150}
-    >
-      <View className="flex-1 bg-background">
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
-          <View className="px-6 py-4">
-            {/* Label */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                Label
-              </Text>
-              <Controller
-                control={control}
-                name="label"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="e.g., Home, Work, Office"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.label && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.label.message}
-                </Text>
-              )}
-            </View>
+    useImperativeHandle(ref, () => ({
+      open: () => sheetRef.current?.open(),
+      close: () => sheetRef.current?.close(),
+    }));
 
-            {/* Full Name */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                Full Name
-              </Text>
-              <Controller
-                control={control}
-                name="fullName"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="Enter your full name"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.fullName && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.fullName.message}
-                </Text>
-              )}
-            </View>
+    const isDefault = watch("isDefault");
 
-            {/* Street Address */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                Street Address
-              </Text>
-              <Controller
-                control={control}
-                name="street"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="Street address, apt/suite number"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.street && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.street.message}
-                </Text>
-              )}
-            </View>
-
-            {/* City */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">City</Text>
-              <Controller
-                control={control}
-                name="city"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="e.g., New York"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.city && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.city.message}
-                </Text>
-              )}
-            </View>
-
-            {/* State */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                State
-              </Text>
-              <Controller
-                control={control}
-                name="state"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="e.g., NY"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.state && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.state.message}
-                </Text>
-              )}
-            </View>
-
-            {/* ZIP Code */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                ZIP Code
-              </Text>
-              <Controller
-                control={control}
-                name="postalCode"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="e.g., 10001"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="numeric"
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.postalCode && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.postalCode.message}
-                </Text>
-              )}
-            </View>
-
-            {/* Country */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                Country
-              </Text>
-              <Controller
-                control={control}
-                name="country"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="e.g., United States"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.country && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.country.message}
-                </Text>
-              )}
-            </View>
-
-            {/* Phone Number */}
-            <View className="mb-4">
-              <Text className="text-text-primary font-semibold mb-2">
-                Phone Number
-              </Text>
-              <Controller
-                control={control}
-                name="phoneNumber"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    className="bg-surface text-text-primary px-4 py-3 rounded-xl"
-                    placeholder="+1 (555) 123-4567"
-                    placeholderTextColor="#666"
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="phone-pad"
-                    editable={!isSubmitting}
-                  />
-                )}
-              />
-              {errors.phoneNumber && (
-                <Text className="text-red-500 text-sm mt-1">
-                  {errors.phoneNumber.message}
-                </Text>
-              )}
-            </View>
-
-            {/* Set as Default */}
-            <TouchableOpacity
-              className="flex-row items-center justify-between bg-surface px-4 py-4 rounded-xl"
-              onPress={() => setValue("isDefault", !isDefault)}
-              disabled={isSubmitting}
-              activeOpacity={0.7}
-            >
-              <Text className="text-text-primary font-semibold">
-                Set as default address
-              </Text>
-              <View
-                className={`w-12 h-7 rounded-full ${
-                  isDefault ? "bg-primary" : "bg-gray-600"
-                } justify-center`}
-              >
-                <View
-                  className={`w-5 h-5 bg-white rounded-full ${
-                    isDefault ? "ml-6" : "ml-1"
-                  }`}
-                />
-              </View>
-            </TouchableOpacity>
+    // ✅ Submit button as footer
+    const footer = (
+      <TouchableOpacity
+        className={`rounded-xl py-4 items-center ${
+          isSubmitting ? "bg-primary/50" : "bg-primary"
+        }`}
+        onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
+        activeOpacity={0.8}
+      >
+        {isSubmitting ? (
+          <View className="flex-row items-center">
+            <ActivityIndicator size="small" color="#000" />
+            <Text className="text-background font-bold text-base ml-2">
+              {isEditMode ? "Updating..." : "Adding..."}
+            </Text>
           </View>
-        </ScrollView>
+        ) : (
+          <Text className="text-background font-bold text-base">
+            {isEditMode ? "Update Address" : "Add Address"}
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
 
-        {/* Submit Button - Fixed at Bottom */}
-        <View className="absolute bottom-0 left-0 right-0 bg-background px-6 py-4 border-t border-surface">
-          <TouchableOpacity
-            className={`rounded-xl py-4 items-center ${
-              isSubmitting ? "bg-primary/50" : "bg-primary"
-            }`}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            activeOpacity={0.8}
-          >
-            {isSubmitting ? (
-              <View className="flex-row items-center">
-                <ActivityIndicator size="small" color="#000" />
-                <Text className="text-background font-bold text-base ml-2">
-                  {isEditMode ? "Updating..." : "Adding..."}
-                </Text>
-              </View>
-            ) : (
-              <Text className="text-background font-bold text-base">
-                {isEditMode ? "Update Address" : "Add Address"}
+    return (
+      <SheetLayout
+        ref={sheetRef}
+        title={isEditMode ? "Edit Address" : "Add New Address"}
+        snapPoints={["65%", "95%"]}
+        onClose={onClose}
+        footer={footer}
+      >
+        <View className="flex-1">
+          {/* Label */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">Label</Text>
+            <Controller
+              control={control}
+              name="label"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="e.g., Home, Work, Office"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.label && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.label.message}
               </Text>
             )}
+          </View>
+
+          {/* Full Name */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">
+              Full Name
+            </Text>
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.fullName && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.fullName.message}
+              </Text>
+            )}
+          </View>
+
+          {/* Street Address */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">
+              Street Address
+            </Text>
+            <Controller
+              control={control}
+              name="street"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="Street address, apt/suite number"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.street && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.street.message}
+              </Text>
+            )}
+          </View>
+
+          {/* City */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">City</Text>
+            <Controller
+              control={control}
+              name="city"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="e.g., New York"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.city && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.city.message}
+              </Text>
+            )}
+          </View>
+
+          {/* State */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">State</Text>
+            <Controller
+              control={control}
+              name="state"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="e.g., NY"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.state && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.state.message}
+              </Text>
+            )}
+          </View>
+
+          {/* ZIP Code */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">
+              ZIP Code
+            </Text>
+            <Controller
+              control={control}
+              name="postalCode"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="e.g., 10001"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="numeric"
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.postalCode && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.postalCode.message}
+              </Text>
+            )}
+          </View>
+
+          {/* Country */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">
+              Country
+            </Text>
+            <Controller
+              control={control}
+              name="country"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="e.g., United States"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.country && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.country.message}
+              </Text>
+            )}
+          </View>
+
+          {/* Phone Number */}
+          <View className="mb-4">
+            <Text className="text-text-primary font-semibold mb-2">
+              Phone Number
+            </Text>
+            <Controller
+              control={control}
+              name="phoneNumber"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  className="bg-surface text-text-primary px-4 py-3 rounded-xl"
+                  placeholder="+1 (555) 123-4567"
+                  placeholderTextColor="#666"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="phone-pad"
+                  editable={!isSubmitting}
+                />
+              )}
+            />
+            {errors.phoneNumber && (
+              <Text className="text-red-500 text-sm mt-1">
+                {errors.phoneNumber.message}
+              </Text>
+            )}
+          </View>
+
+          {/* Set as Default */}
+          <TouchableOpacity
+            className="flex-row items-center justify-between bg-surface px-4 py-4 rounded-xl"
+            onPress={() => setValue("isDefault", !isDefault)}
+            disabled={isSubmitting}
+            activeOpacity={0.7}
+          >
+            <Text className="text-text-primary font-semibold">
+              Set as default address
+            </Text>
+            <View
+              className={`w-12 h-7 rounded-full ${
+                isDefault ? "bg-primary" : "bg-gray-600"
+              } justify-center`}
+            >
+              <View
+                className={`w-5 h-5 bg-white rounded-full ${
+                  isDefault ? "ml-6" : "ml-1"
+                }`}
+              />
+            </View>
           </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAvoidingView>
-  );
-};
+      </SheetLayout>
+    );
+  }
+);
+
+AddressForm.displayName = "AddressForm";
 
 export default AddressForm;
