@@ -28,7 +28,7 @@ const CartAddressSelectionModal = forwardRef<
       <SheetLayout
         ref={ref}
         title="Select Shipping Address"
-        snapPoints={["75", "95%"]}
+        snapPoints={["75%", "95%"]}
         onClose={onClose}
         footer={
           addresses.length > 0 && (

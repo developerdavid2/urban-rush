@@ -22,7 +22,7 @@ import { useAxiosApi } from "@/lib/axios";
 import {
   initPaymentSheet,
   presentPaymentSheet,
-} from "@/node_modules/@stripe/stripe-react-native/src/functions";
+} from "@stripe/stripe-react-native";
 
 const CartTabScreen = () => {
   const addressSheetRef = useRef<any>(null);
@@ -61,6 +61,7 @@ const CartTabScreen = () => {
   useEffect(() => {
     const initialQuantities: Record<string, number> = {};
     cartItems?.forEach((item) => {
+      if (!item.product?._id) return;
       initialQuantities[item.product._id] = item.quantity;
     });
     setLocalQuantities(initialQuantities);
