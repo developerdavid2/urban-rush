@@ -128,7 +128,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) =>
         footer ? (
-          <BottomSheetFooter {...props} bottomInset={24}>
+          <BottomSheetFooter {...props} bottomInset={0}>
             <Animated.View style={animatedFooterStyle}>
               <View className="bg-background border-t border-surface px-6 py-4">
                 {footer}
@@ -184,7 +184,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 padding: 20,
-                paddingBottom: 20,
+                paddingBottom: 100,
               }}
             >
               {children}
