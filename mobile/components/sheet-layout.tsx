@@ -7,7 +7,14 @@ import React, {
   useImperativeHandle,
   useEffect,
 } from "react";
-import { View, Text, TouchableOpacity, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Keyboard,
+  Dimensions,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetScrollView,
@@ -20,36 +27,40 @@ import Animated, {
   withSpring,
   useSharedValue,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SheetLayoutProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
   snapPoints?: (string | number)[];
-  bottomInset?: number;
   onClose?: () => void;
 }
 
 const SheetLayout = forwardRef<any, SheetLayoutProps>(
-  (
-    {
-      title,
-      children,
-      footer,
-      snapPoints: customSnapPoints,
-      bottomInset = 0,
-      onClose,
-    },
-    ref
-  ) => {
+  ({ title, children, footer, snapPoints: customSnapPoints, onClose }, ref) => {
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const footerTranslateY = useSharedValue(100); // Start off-screen (below)
+    const footerTranslateY = useSharedValue(100);
+    const insets = useSafeAreaInsets();
+
+    const bottomInset = useMemo(() => {
+      const safeAreaBottom = insets.bottom;
+
+      if (safeAreaBottom > 0) {
+        return safeAreaBottom;
+      } else {
+        {
+          return 20;
+        }
+      }
+    }, [insets.bottom]);
 
     const snapPoints = useMemo(
       () => customSnapPoints || ["50%", "85%"],
       [customSnapPoints]
     );
 
+    // Handle keyboard events
     useEffect(() => {
       const expandedIndex = snapPoints.length > 1 ? 1 : 0;
       const keyboardDidShow = Keyboard.addListener("keyboardDidShow", () => {
@@ -69,7 +80,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
     useImperativeHandle(ref, () => ({
       open: () => {
         bottomSheetRef.current?.snapToIndex(0);
-        footerTranslateY.value = 100; // Reset to off-screen
+        footerTranslateY.value = 100;
         setTimeout(() => {
           footerTranslateY.value = withSpring(0, {
             damping: 40,
@@ -92,7 +103,6 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
     }));
 
     const handleClose = useCallback(() => {
-      // ✅ Slide footer down before closing
       footerTranslateY.value = withSpring(100, {
         damping: 15,
         stiffness: 150,
@@ -104,18 +114,15 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
       }, 200);
     }, [onClose, footerTranslateY]);
 
-    // ✅ Handle sheet change to reset footer when sheet is fully closed
     const handleSheetChange = useCallback(
       (index: number) => {
         if (index === -1) {
-          // Sheet is fully closed - reset footer position
           footerTranslateY.value = 100;
         }
       },
       [footerTranslateY]
     );
 
-    // ✅ Animated footer style - slides up from bottom
     const animatedFooterStyle = useAnimatedStyle(() => ({
       transform: [
         {
@@ -124,7 +131,6 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
       ],
     }));
 
-    // ✅ Render footer with slide animation
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) =>
         footer ? (
@@ -147,7 +153,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
           snapPoints={snapPoints}
           bottomInset={bottomInset}
           enableDynamicSizing={false}
-          enablePanDownToClose={true}
+          enablePanDownToClose={false}
           enableOverDrag={false}
           animateOnMount={true}
           keyboardBehavior="extend"
@@ -156,7 +162,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
           backgroundStyle={{ backgroundColor: "#121212" }}
           handleIndicatorStyle={{
             backgroundColor: "#10b981",
-            width: 40,
+            width: 90,
             height: 5,
           }}
           handleStyle={{
@@ -184,7 +190,7 @@ const SheetLayout = forwardRef<any, SheetLayoutProps>(
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 padding: 20,
-                paddingBottom: 100,
+                paddingBottom: 270,
               }}
             >
               {children}

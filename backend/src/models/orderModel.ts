@@ -43,7 +43,7 @@ const orderSchema = new Schema<OrderDocument>(
       state: { type: String, required: true },
       postalCode: { type: String, required: true },
       country: { type: String, required: true },
-      phone: { type: String, required: true },
+      phoneNumber: { type: String, required: true },
     },
     paymentStatus: {
       type: String,

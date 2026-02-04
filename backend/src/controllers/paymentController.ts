@@ -122,15 +122,28 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     try {
       await session.withTransaction(async () => {
-        const { userId, cartId, totalPrice, shippingAddress } =
-          paymentIntent.metadata;
+        const {
+          userId,
+          totalPrice,
+          shippingAddress: shippingAddressStr,
+        } = paymentIntent.metadata;
 
-        if (!userId || !cartId) {
-          throw new Error("Missing userId or cartId in metadata");
+        if (!userId) {
+          console.error("No userId in metadata");
+          return res.json({ received: true });
         }
 
-        if (!shippingAddress) {
+        if (!shippingAddressStr) {
           console.error("No shipping address in metadata");
+          return res.json({ received: true });
+        }
+
+        // Parse shipping address
+        let shippingAddress;
+        try {
+          shippingAddress = JSON.parse(shippingAddressStr);
+        } catch (parseError) {
+          console.error("Failed to parse shipping address:", parseError);
           return res.json({ received: true });
         }
 
@@ -140,12 +153,16 @@ export const handleWebhook = async (req: Request, res: Response) => {
         }).session(session);
 
         if (existingOrder) {
-          console.log("Order already exists for payment:", paymentIntent.id);
-          return; // exit transaction early
+          return res.json({ received: true });
         }
 
+        const user = await User.findById(userId).session(session);
+        if (!user) {
+          console.error("User not found:", userId);
+          return res.json({ received: true });
+        }
         // Fetch cart
-        const cart = await Cart.findById(cartId)
+        const cart = await Cart.findOne({ userId })
           .populate({
             path: "items.productId",
             select: "name price images stock",
@@ -156,11 +173,10 @@ export const handleWebhook = async (req: Request, res: Response) => {
           throw new Error("Cart not found or empty");
         }
 
-        // Build order items
         const orderItems = cart.items
           .filter((item) => item.productId != null)
           .map((item) => {
-            const prod = item.productId as any; // populated
+            const prod = item.productId as any;
             return {
               productId: prod._id,
               name: prod.name || "Unknown Product",
@@ -196,11 +212,19 @@ export const handleWebhook = async (req: Request, res: Response) => {
         const order = await Order.create(
           [
             {
-              userId: new mongoose.Types.ObjectId(userId),
-              clerkId: paymentIntent.metadata.clerkId || "",
+              userId,
+              clerkId: user.clerkId,
               items: orderItems,
-              totalAmount: parseFloat(totalPrice || "0"),
-              shippingAddress: JSON.parse(shippingAddress),
+              totalAmount: parseFloat(totalPrice),
+              shippingAddress: {
+                fullName: shippingAddress.fullName,
+                street: shippingAddress.streetAddress,
+                city: shippingAddress.city,
+                state: shippingAddress.state,
+                postalCode: shippingAddress.postalCode,
+                country: shippingAddress.country,
+                phoneNumber: shippingAddress.phoneNumber,
+              },
               paymentStatus: "paid",
               orderStatus: "pending",
               paymentIntentId: paymentIntent.id,
@@ -215,8 +239,6 @@ export const handleWebhook = async (req: Request, res: Response) => {
           { $set: { items: [] } },
           { session }
         );
-
-        console.log("Order created successfully:", order[0]._id);
       });
     } catch (error: any) {
       console.error("Webhook transaction failed:", error.message);
