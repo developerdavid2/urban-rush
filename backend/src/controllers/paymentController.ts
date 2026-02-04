@@ -130,12 +130,12 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
         if (!userId) {
           console.error("No userId in metadata");
-          return res.json({ received: true });
+          return;
         }
 
         if (!shippingAddressStr) {
           console.error("No shipping address in metadata");
-          return res.json({ received: true });
+          return;
         }
 
         // Parse shipping address
@@ -144,7 +144,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
           shippingAddress = JSON.parse(shippingAddressStr);
         } catch (parseError) {
           console.error("Failed to parse shipping address:", parseError);
-          return res.json({ received: true });
+          return;
         }
 
         // Prevent duplicate order
@@ -153,13 +153,13 @@ export const handleWebhook = async (req: Request, res: Response) => {
         }).session(session);
 
         if (existingOrder) {
-          return res.json({ received: true });
+          return;
         }
 
         const user = await User.findById(userId).session(session);
         if (!user) {
           console.error("User not found:", userId);
-          return res.json({ received: true });
+          return;
         }
         // Fetch cart
         const cart = await Cart.findOne({ userId })
@@ -170,7 +170,8 @@ export const handleWebhook = async (req: Request, res: Response) => {
           .session(session);
 
         if (!cart || cart.items.length === 0) {
-          throw new Error("Cart not found or empty");
+          console.error("Cart not found or empty");
+          return;
         }
 
         const orderItems = cart.items
@@ -190,12 +191,11 @@ export const handleWebhook = async (req: Request, res: Response) => {
           throw new Error("No valid items in cart");
         }
 
-        // Atomic stock decrement with guard
         for (const item of cart.items) {
           const updated = await Product.findOneAndUpdate(
             {
               _id: item.productId,
-              stock: { $gte: item.quantity }, // guard: only if enough stock
+              stock: { $gte: item.quantity },
             },
             { $inc: { stock: -item.quantity } },
             { session, new: true }
@@ -208,7 +208,6 @@ export const handleWebhook = async (req: Request, res: Response) => {
           }
         }
 
-        // Create order inside transaction
         const order = await Order.create(
           [
             {
@@ -226,14 +225,13 @@ export const handleWebhook = async (req: Request, res: Response) => {
                 phoneNumber: shippingAddress.phoneNumber,
               },
               paymentStatus: "paid",
-              orderStatus: "pending",
+              orderStatus: "processing",
               paymentIntentId: paymentIntent.id,
             },
           ],
           { session }
         );
 
-        // Clear cart inside transaction
         await Cart.findByIdAndUpdate(
           cart._id,
           { $set: { items: [] } },
@@ -242,13 +240,11 @@ export const handleWebhook = async (req: Request, res: Response) => {
       });
     } catch (error: any) {
       console.error("Webhook transaction failed:", error.message);
-      // Throw to send 500 → Stripe will retry
       throw error;
     } finally {
       session.endSession();
     }
   }
 
-  // Success response (only if no error thrown)
-  res.status(200).json({ received: true });
+  return res.status(200).json({ received: true });
 };
