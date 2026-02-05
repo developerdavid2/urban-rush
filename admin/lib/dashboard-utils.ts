@@ -204,6 +204,31 @@ export function getUserStatusConfig(status: UserStatus): UserStatusConfig {
   return configs[status];
 }
 
+// Payment status configuration
+export const getPaymentStatusConfig = (status: string) => {
+  const configs = {
+    paid: {
+      label: "Paid",
+      bgClass: "bg-green-500/10",
+      textClass: "text-green-500",
+      borderClass: "border-green-500/20",
+    },
+    pending: {
+      label: "Pending",
+      bgClass: "bg-yellow-500/10",
+      textClass: "text-yellow-500",
+      borderClass: "border-yellow-500/20",
+    },
+    failed: {
+      label: "Failed",
+      bgClass: "bg-red-500/10",
+      textClass: "text-red-500",
+      borderClass: "border-red-500/20",
+    },
+  };
+  return configs[status as keyof typeof configs] || configs.pending;
+};
+
 export const formatDate = (dateString: string) => {
   if (!dateString) return "";
   const date = new Date(dateString);

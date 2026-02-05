@@ -46,31 +46,24 @@ export interface Address {
 
 export interface Order {
   _id: string;
-  user: string;
+  userId: string;
   clerkId: string;
-  orderItems: OrderItem[];
-  shippingAddress: {
-    fullName: string;
-    streetAddress: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phoneNumber: string;
-  };
-  paymentResult: {
-    id: string;
-    status: string;
-  };
-  totalPrice: number;
-  status: "pending" | "shipped" | "delivered";
+  items: OrderItem[];
+  totalAmount: number;
+  shippingAddress: Address;
+  paymentStatus: "pending" | "paid" | "failed";
+  orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentIntentId?: string;
   hasReviewed: boolean;
+  deliveredAt?: string;
+  cancelledAt?: string;
+  shippedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
-
 export interface OrderItem {
   _id: string;
-  product: Product;
+  productId: Product;
   name: string;
   price: number;
   quantity: number;
@@ -83,6 +76,7 @@ export interface Review {
   userId: string | User;
   orderId: string;
   rating: number;
+  review?: string;
   createdAt: string;
   updatedAt: string;
 }

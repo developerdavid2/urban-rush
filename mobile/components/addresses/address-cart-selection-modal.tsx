@@ -2,7 +2,6 @@ import SheetLayout from "@/components/sheet-layout";
 import { useAddresses } from "@/hooks/useAddresses";
 import { Address } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { router } from "expo-router";
 import { forwardRef } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -30,7 +29,6 @@ const CartAddressSelectionModal = forwardRef<
         ref={ref}
         title="Select Shipping Address"
         snapPoints={["50%", "80%"]}
-        bottomInset={0} // ✅ Set to 0 to cover entire screen
         onClose={onClose}
         footer={
           addresses.length > 0 && (

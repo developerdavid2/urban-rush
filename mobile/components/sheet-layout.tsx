@@ -1,31 +1,24 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useMemo,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-  useEffect,
-} from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Keyboard,
-  Dimensions,
-  Platform,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, {
-  BottomSheetScrollView,
   BottomSheetFooter,
   BottomSheetFooterProps,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Portal } from "@gorhom/portal";
+import React, {
+  forwardRef,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+import { Keyboard, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  withSpring,
   useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

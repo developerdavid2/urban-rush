@@ -36,16 +36,18 @@ export const getReviewsByProduct = async (req: Request, res: Response) => {
   }
 };
 
+// Backend - reviewController.ts
 export const createReview = async (req: Request, res: Response) => {
   try {
     const { productId, review, rating, orderId } = req.body;
     const userId = req.user!._id;
 
-    // Validate input
-    if (!productId || !review?.trim() || !rating || !orderId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields required" });
+    // ✅ Make review optional - only validate productId, rating, orderId
+    if (!productId || !rating || !orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID, rating, and order ID are required",
+      });
     }
 
     if (rating < 1 || rating > 5) {
@@ -54,41 +56,9 @@ export const createReview = async (req: Request, res: Response) => {
         .json({ success: false, message: "Rating must be 1 - 5" });
     }
 
-    // Verify order: exists, belongs to user, is delivered
-    const order = await Order.findOne({
-      _id: orderId,
-      userId,
-      orderStatus: "delivered",
-    });
-
-    if (!order) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only review delivered orders you own",
-      });
-    }
-
-    // Verify product was in the order
-    const itemInOrder = order.items.some(
-      (item) => item.productId.toString() === productId
-    );
-    if (!itemInOrder) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Product not in this order" });
-    }
-
-    //Check if review already exists
-    const existingReview = await Review.findOne({ productId, userId });
-    if (existingReview) {
-      return res
-        .status(400)
-        .json({ success: false, message: "You already reviewed this product" });
-    }
-
-    // Create review
+    // Create review with optional review text
     const newReview = await Review.create({
-      review: review.trim(),
+      review: review?.trim() || "", // ✅ Allow empty string if no review text
       rating,
       productId,
       userId,
@@ -104,7 +74,6 @@ export const createReview = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error creating review:", error);
-
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

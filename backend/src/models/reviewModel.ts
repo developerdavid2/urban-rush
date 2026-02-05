@@ -11,7 +11,6 @@ const reviewSchema = new Schema<ReviewDocument, ReviewModel>(
   {
     review: {
       type: String,
-      required: [true, "Review cannot be empty!"],
       trim: true,
       maxlength: [500, "Review must be less or equal to 500 characters"],
     },

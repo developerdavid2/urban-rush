@@ -217,7 +217,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
               totalAmount: parseFloat(totalPrice),
               shippingAddress: {
                 fullName: shippingAddress.fullName,
-                street: shippingAddress.streetAddress,
+                street: shippingAddress.street,
                 city: shippingAddress.city,
                 state: shippingAddress.state,
                 postalCode: shippingAddress.postalCode,

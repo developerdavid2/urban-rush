@@ -138,7 +138,7 @@ const CartTabScreen = () => {
         cartItems,
         shippingAddress: {
           fullName: selectedAddress?.fullName,
-          streetAddress: selectedAddress?.street,
+          street: selectedAddress?.street,
           city: selectedAddress?.city,
           country: selectedAddress?.country,
           state: selectedAddress?.state,

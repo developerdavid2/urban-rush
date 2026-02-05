@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 
 export interface ReviewDocument extends Document {
-  review: string;
+  review?: string;
   rating: number;
   createdAt: Date;
   productId: mongoose.Types.ObjectId;
