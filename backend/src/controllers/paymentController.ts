@@ -9,88 +9,185 @@ import mongoose from "mongoose";
 
 const stripe = new Stripe(ENV.STRIPE_SECRET_KEY);
 export const createPaymentIntent = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+
   try {
-    const { cartItems, shippingAddress } = req.body;
-    const user = req.user;
+    const result = await session.withTransaction(async () => {
+      const { cartItems, shippingAddress } = req.body;
+      const user = req.user;
 
-    if (!user) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ success: false, message: "Cart is empty" });
-    }
-
-    if (!shippingAddress) {
-      return res.status(400).json({
-        success: false,
-        message: "Shipping address is required",
-      });
-    }
-
-    // 1. Validate products & stock
-    let subtotal = 0;
-    for (const item of cartItems) {
-      const product = await Product.findById(item.product._id);
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: `Product ${item.product.name} not found`,
-        });
+      if (!user) {
+        throw new Error("Unauthorized");
       }
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${product.name}`,
-        });
+
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error("Cart is empty");
       }
-      subtotal += product.price * item.quantity;
-    }
 
-    const shipping = 10.0;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shipping + tax;
+      if (!shippingAddress) {
+        throw new Error("Shipping address is required");
+      }
 
-    // 2. Find or create Stripe customer
-    let customerId: string;
-    if (user.stripeCustomerId) {
-      customerId = user.stripeCustomerId;
-    } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name,
+      // 1. Validate products & calculate total
+      let subtotal = 0;
+      const validatedItems = [];
+
+      for (const item of cartItems) {
+        const product = await Product.findById(item.product._id).session(
+          session
+        );
+
+        if (!product) {
+          throw new Error(`Product ${item.product.name} not found`);
+        }
+
+        if (product.stock < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.name}`);
+        }
+
+        validatedItems.push({
+          product,
+          quantity: item.quantity,
+        });
+
+        subtotal += product.price * item.quantity;
+      }
+
+      const shipping = 10.0;
+      const tax = subtotal * 0.08;
+      const total = subtotal + shipping + tax;
+
+      // 2. Decrement stock immediately (prevents overselling during checkout)
+      for (const item of validatedItems) {
+        const updated = await Product.findOneAndUpdate(
+          {
+            _id: item.product._id,
+            stock: { $gte: item.quantity },
+          },
+          { $inc: { stock: -item.quantity } },
+          { session, new: true }
+        );
+
+        if (!updated) {
+          throw new Error(
+            `Insufficient stock for ${item.product.name} (race condition)`
+          );
+        }
+      }
+
+      // 3. Find or create Stripe customer
+      let customerId: string;
+      if (user.stripeCustomerId) {
+        customerId = user.stripeCustomerId;
+      } else {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: user.name,
+          metadata: {
+            clerkId: user.clerkId,
+            userId: user._id.toString(),
+          },
+        });
+        customerId = customer.id;
+        await User.findByIdAndUpdate(
+          user._id,
+          { stripeCustomerId: customerId },
+          { session }
+        );
+      }
+
+      // 4. Create Order with PENDING status
+      const orderItems = validatedItems.map((item) => ({
+        productId: item.product._id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.images?.[0] || "",
+      }));
+
+      const [order] = await Order.create(
+        [
+          {
+            userId: user._id,
+            clerkId: user.clerkId,
+            items: orderItems,
+            totalAmount: total,
+            shippingAddress: {
+              fullName: shippingAddress.fullName,
+              street: shippingAddress.street,
+              city: shippingAddress.city,
+              state: shippingAddress.state,
+              postalCode: shippingAddress.postalCode,
+              country: shippingAddress.country,
+              phoneNumber: shippingAddress.phoneNumber,
+            },
+            paymentStatus: "pending",
+            orderStatus: "pending",
+          },
+        ],
+        { session }
+      );
+
+      // 5. Create PaymentIntent with orderId in metadata
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(total * 100),
+        currency: "usd",
+        customer: customerId,
+        automatic_payment_methods: { enabled: true },
         metadata: {
-          clerkId: user.clerkId,
+          orderId: order._id.toString(),
           userId: user._id.toString(),
+          clerkId: user.clerkId,
         },
+        description: `Order #${order._id} for ${user.name} - $${total.toFixed(
+          2
+        )}`,
       });
-      customerId = customer.id;
-      await User.findByIdAndUpdate(user._id, { stripeCustomerId: customerId });
-    }
 
-    // 3. Create PaymentIntent with shipping address in metadata (as JSON string)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(total * 100),
-      currency: "usd",
-      customer: customerId,
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        userId: user._id.toString(),
-        clerkId: user.clerkId,
-        totalPrice: total.toFixed(2),
-        shippingAddress: JSON.stringify(shippingAddress),
-      },
-      description: `Order for ${user.name} - $${total.toFixed(2)}`,
+      // 6. Update order with paymentIntentId
+      order.paymentIntentId = paymentIntent.id;
+      await order.save({ session });
+
+      // 7. Clear cart
+      await Cart.findOneAndUpdate(
+        { userId: user._id },
+        { $set: { items: [] } },
+        { session }
+      );
+
+      return {
+        clientSecret: paymentIntent.client_secret,
+        orderId: order._id.toString(),
+      };
     });
 
-    // 4. Return client secret
-    res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    res.status(200).json({
+      success: true,
+      clientSecret: result.clientSecret,
+      orderId: result.orderId,
+    });
   } catch (error: any) {
     console.error("Error creating payment intent:", error);
-    res.status(500).json({
+
+    // Provide specific error messages
+    const statusCode =
+      error.message === "Unauthorized"
+        ? 401
+        : error.message === "Cart is empty" ||
+          error.message === "Shipping address is required"
+        ? 400
+        : error.message.includes("not found")
+        ? 404
+        : error.message.includes("Insufficient stock")
+        ? 400
+        : 500;
+
+    res.status(statusCode).json({
       success: false,
       message: error.message || "Failed to create payment intent",
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -118,133 +215,123 @@ export const handleWebhook = async (req: Request, res: Response) => {
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-    const session = await mongoose.startSession();
+    try {
+      const order = await Order.findOne({
+        paymentIntentId: paymentIntent.id,
+      });
+
+      if (!order) {
+        console.error(`Order not found for PaymentIntent: ${paymentIntent.id}`);
+        return res.status(200).json({ received: true });
+      }
+
+      // Prevent duplicate processing
+      if (order.paymentStatus === "paid") {
+        return res.status(200).json({ received: true });
+      }
+
+      // Update order to PAID
+      order.paymentStatus = "paid";
+      order.orderStatus = "processing";
+      await order.save();
+    } catch (error: any) {
+      console.error("Error processing payment_intent.succeeded:", error);
+      return res.status(200).json({ received: true, error: error.message });
+    }
+  }
+
+  // Handle failed payment
+  if (event.type === "payment_intent.payment_failed") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
     try {
-      await session.withTransaction(async () => {
-        const {
-          userId,
-          totalPrice,
-          shippingAddress: shippingAddressStr,
-        } = paymentIntent.metadata;
+      const order = await Order.findOneAndUpdate(
+        { paymentIntentId: paymentIntent.id },
+        { paymentStatus: "failed" },
+        { new: true }
+      );
 
-        if (!userId) {
-          console.error("No userId in metadata");
-          return;
-        }
+      if (order) {
+        console.error(` Order ${order._id} payment failed`);
+      }
+    } catch (error: any) {
+      console.error("Error processing payment_intent.payment_failed:", error);
+    }
+  }
 
-        if (!shippingAddressStr) {
-          console.error("No shipping address in metadata");
-          return;
-        }
+  // Handle cancelled payment intent
+  if (event.type === "payment_intent.canceled") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-        // Parse shipping address
-        let shippingAddress;
-        try {
-          shippingAddress = JSON.parse(shippingAddressStr);
-        } catch (parseError) {
-          console.error("Failed to parse shipping address:", parseError);
-          return;
-        }
+    try {
+      const order = await Order.findOne({
+        paymentIntentId: paymentIntent.id,
+      });
 
-        // Prevent duplicate order
-        const existingOrder = await Order.findOne({
-          paymentIntentId: paymentIntent.id,
-        }).session(session);
-
-        if (existingOrder) {
-          return;
-        }
-
-        const user = await User.findById(userId).session(session);
-        if (!user) {
-          console.error("User not found:", userId);
-          return;
-        }
-        // Fetch cart
-        const cart = await Cart.findOne({ userId })
-          .populate({
-            path: "items.productId",
-            select: "name price images stock",
-          })
-          .session(session);
-
-        if (!cart || cart.items.length === 0) {
-          console.error("Cart not found or empty");
-          return;
-        }
-
-        const orderItems = cart.items
-          .filter((item) => item.productId != null)
-          .map((item) => {
-            const prod = item.productId as any;
-            return {
-              productId: prod._id,
-              name: prod.name || "Unknown Product",
-              price: prod.price || 0,
-              quantity: item.quantity,
-              image: prod.images?.[0] || "",
-            };
-          });
-
-        if (orderItems.length === 0) {
-          throw new Error("No valid items in cart");
-        }
-
-        for (const item of cart.items) {
-          const updated = await Product.findOneAndUpdate(
-            {
-              _id: item.productId,
-              stock: { $gte: item.quantity },
-            },
-            { $inc: { stock: -item.quantity } },
-            { session, new: true }
-          );
-
-          if (!updated) {
-            throw new Error(
-              `Insufficient stock for product ${item.productId} (expected ${item.quantity})`
+      if (order && order.paymentStatus === "pending") {
+        // Optionally restore stock when payment is explicitly cancelled
+        const session = await mongoose.startSession();
+        await session.withTransaction(async () => {
+          for (const item of order.items) {
+            await Product.findByIdAndUpdate(
+              item.productId,
+              { $inc: { stock: item.quantity } },
+              { session }
             );
           }
-        }
 
-        const order = await Order.create(
-          [
-            {
-              userId,
-              clerkId: user.clerkId,
-              items: orderItems,
-              totalAmount: parseFloat(totalPrice),
-              shippingAddress: {
-                fullName: shippingAddress.fullName,
-                street: shippingAddress.street,
-                city: shippingAddress.city,
-                state: shippingAddress.state,
-                postalCode: shippingAddress.postalCode,
-                country: shippingAddress.country,
-                phoneNumber: shippingAddress.phoneNumber,
-              },
-              paymentStatus: "paid",
-              orderStatus: "processing",
-              paymentIntentId: paymentIntent.id,
-            },
-          ],
-          { session }
-        );
+          order.orderStatus = "cancelled";
+          order.cancelledAt = new Date();
+          await order.save({ session });
+        });
+        session.endSession();
 
-        await Cart.findByIdAndUpdate(
-          cart._id,
-          { $set: { items: [] } },
-          { session }
-        );
-      });
+        console.log(` Order ${order._id} cancelled, stock restored`);
+      }
     } catch (error: any) {
-      console.error("Webhook transaction failed:", error.message);
-      throw error;
-    } finally {
-      session.endSession();
+      console.error("Error processing payment_intent.canceled:", error);
     }
   }
 
   return res.status(200).json({ received: true });
+};
+
+export const cleanupStaleOrders = async () => {
+  const ONE_HOUR_AGO = new Date(Date.now() - 60 * 60 * 1000);
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      const staleOrders = await Order.find({
+        paymentStatus: "pending",
+        orderStatus: "pending",
+        createdAt: { $lt: ONE_HOUR_AGO },
+      }).session(session);
+
+      console.log(`Found ${staleOrders.length} stale orders to cleanup`);
+
+      for (const order of staleOrders) {
+        // Restore stock
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(
+            item.productId,
+            { $inc: { stock: item.quantity } },
+            { session }
+          );
+        }
+
+        // Mark as cancelled
+        order.orderStatus = "cancelled";
+        order.cancelledAt = new Date();
+        await order.save({ session });
+
+        console.log(`🧹 Cleaned up stale order ${order._id}`);
+      }
+    });
+  } catch (error) {
+    console.error("Error cleaning up stale orders:", error);
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };

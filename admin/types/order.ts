@@ -1,9 +1,15 @@
 import { Product } from "./product";
 import { Address } from "./user";
 
+export interface OrderUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 export interface Order {
   _id: string;
-  userId: string;
+  userId: OrderUser;
   clerkId: string;
   items: OrderItem[];
   totalAmount: number;
@@ -11,13 +17,14 @@ export interface Order {
   paymentStatus: "pending" | "paid" | "failed";
   orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   paymentIntentId?: string;
-  hasReviewed: boolean;
+  hasReviewed?: boolean;
   deliveredAt?: string;
   cancelledAt?: string;
   shippedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
+
 export interface OrderItem {
   _id: string;
   productId: Product;

@@ -98,6 +98,25 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     }
     if (orderStatus === "cancelled") {
       order.cancelledAt = new Date();
+
+      // If order is cancelled AFTER payment, consider restoring stock
+      // Only restore if payment was successful (otherwise stock was already restored)
+      if (order.paymentStatus === "paid") {
+        const session = await mongoose.startSession();
+        try {
+          await session.withTransaction(async () => {
+            for (const item of order.items) {
+              await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { stock: item.quantity } },
+                { session }
+              );
+            }
+          });
+        } finally {
+          session.endSession();
+        }
+      }
     }
 
     await order.save();
@@ -107,53 +126,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
-    });
-  }
-};
-
-export const getDashboardStats = async (req: Request, res: Response) => {
-  try {
-    const totalOrders = await Order.countDocuments();
-    const revenueAgg = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$totalAmount" },
-        },
-      },
-    ]);
-    const totalRevenue = revenueAgg.length > 0 ? revenueAgg[0].totalRevenue : 0;
-
-    const totalCustomers = await User.countDocuments({ role: "customer" });
-
-    const totalProducts = await Product.countDocuments();
-
-    res.status(200).json({
-      success: true,
-      data: {
-        orders: {
-          current: totalOrders,
-          previous: 0,
-        },
-        revenue: {
-          current: totalRevenue,
-          previous: 0,
-        },
-        customers: {
-          current: totalCustomers,
-          previous: 0,
-        },
-        products: {
-          current: totalProducts,
-          previous: 0,
-        },
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching dashboard stats", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch dashboard stats",
     });
   }
 };
@@ -210,13 +182,13 @@ export const getMyOrders = async (req: Request, res: Response) => {
   }
 };
 
-export const createOrder = async (req: Request, res: Response) => {
-  //start a transction
+export const createManualOrder = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const user = req.user;
+
     if (!user) {
       await session.abortTransaction();
       session.endSession();
@@ -224,6 +196,10 @@ export const createOrder = async (req: Request, res: Response) => {
         success: false,
         message: "Unauthorized",
       });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const { items, shippingAddress, paymentStatus, orderStatus, totalAmount } =
@@ -238,9 +214,10 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // Validate products, decrement stock, all within the session
+    // Validate products and decrement stock
     for (const item of items) {
       const product = await Product.findById(item.productId).session(session);
+
       if (!product) {
         await session.abortTransaction();
         session.endSession();
@@ -276,6 +253,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
     await session.commitTransaction();
     session.endSession();
+
     res.status(201).json({
       success: true,
       data: savedOrder,
@@ -283,7 +261,7 @@ export const createOrder = async (req: Request, res: Response) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.error("Error creating order", error);
+    console.error("Error creating manual order", error);
     res.status(500).json({
       success: false,
       message: "Failed to create order",

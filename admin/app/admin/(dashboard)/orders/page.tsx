@@ -7,6 +7,7 @@ import {
   getPaymentStatusConfig,
 } from "@/lib/dashboard-utils";
 import { Column, TableView } from "@/modules/components/table-view";
+import { OrderDetailModal } from "@/modules/orders/ui/components/order-modal";
 import { Order } from "@/types/order";
 import { Avatar, AvatarGroup, Chip } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -34,6 +35,21 @@ export default function OrdersPage() {
 
   const orders = ordersResponse?.data || [];
 
+  React.useEffect(() => {
+    console.log("=== DEBUG ===");
+    console.log("Total orders:", orders.length);
+    console.log(
+      "Order IDs:",
+      orders.map((o) => o._id)
+    );
+
+    // Check for duplicates
+    const ids = orders.map((o) => String(o._id));
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      console.error("⚠️ DUPLICATE IDs FOUND!");
+    }
+  }, [orders]);
   const handleRowClick = (order: Order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
@@ -49,15 +65,15 @@ export default function OrdersPage() {
 
     switch (columnKey) {
       case "_id": {
-        const id = String(order._id).slice(-8).toUpperCase();
+        const id = String(order._id).slice(0, 8).toUpperCase();
         return (
           <div className="flex flex-col">
             <p className="font-mono text-sm font-semibold text-gray-200">
               #{id}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5 uppercase">
               {order.paymentIntentId
-                ? `PI: ${String(order.paymentIntentId).slice(-6)}`
+                ? `PI: ${String(order.paymentIntentId).slice(3, 10)}`
                 : "No PI"}
             </p>
           </div>
@@ -279,33 +295,30 @@ export default function OrdersPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-admin-card border border-admin-divider rounded-lg overflow-hidden">
-            <TableView<Order>
-              items={orders}
-              columns={columns}
-              renderCell={renderCell}
-              getItemKey={(order) => String(order._id)}
-              isLoading={isLoading}
-              emptyMessage="No orders found"
-              searchPlaceholder="Search by order ID, customer name, or status..."
-              searchKeys={[
-                "_id",
-                "userId.name",
-                "userId.email",
-                "paymentStatus",
-                "orderStatus",
-              ]}
-              onRowClick={handleRowClick}
-            />
-          </div>
+          <TableView<Order>
+            items={orders}
+            columns={columns}
+            renderCell={renderCell}
+            getItemKey={(order) => String(order._id)}
+            isLoading={isLoading}
+            emptyMessage="No orders found"
+            searchPlaceholder="Search by order ID, payment Intent ID,  customer, name, email, or status..."
+            searchKeys={[
+              "_id",
+              "paymentStatus",
+              "userId.name",
+              "userId.email",
+              "orderStatus",
+              "paymentIntentId",
+            ]}
+          />
         )}
       </div>
-      {/* Order Detail Modal
       <OrderDetailModal
         order={selectedOrder}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-      /> */}
+      />
     </>
   );
 }

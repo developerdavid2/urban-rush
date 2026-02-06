@@ -1,11 +1,7 @@
 "use client";
 
 import { productApi } from "@/app/actions/productApi";
-import {
-  getStockStatus,
-  getStockStatusConfig,
-  StockStatus,
-} from "@/lib/dashboard-utils";
+import { getStockStatusConfig, StockStatus } from "@/lib/dashboard-utils";
 import { Column, TableView } from "@/modules/components/table-view";
 import { DeleteProductModal } from "@/modules/products/ui/components/delete-product-modal";
 import { ProductForm } from "@/modules/products/ui/components/product-form";
@@ -14,8 +10,7 @@ import { Button, Chip, useDisclosure } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
-import React, { useCallback, useMemo, useState } from "react";
-import { toast } from "react-hot-toast";
+import React, { useCallback, useState } from "react";
 
 const columns: Column[] = [
   { name: "PRODUCT ID", uid: "_id", sortable: true },

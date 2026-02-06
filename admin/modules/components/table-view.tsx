@@ -25,7 +25,64 @@ export interface Column {
   sortable?: boolean;
 }
 
-interface TableViewProps<T extends Record<string, unknown>> {
+// Type helpers
+type NestedKeyOf<ObjectType extends object> = {
+  [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object
+    ? ObjectType[Key] extends Array<infer ArrayItem>
+      ? ArrayItem extends object
+        ? `${Key}` | `${Key}.${NestedKeyOf<ArrayItem>}`
+        : `${Key}`
+      : `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
+    : `${Key}`;
+}[keyof ObjectType & (string | number)];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function convertToSearchableString(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
+
+  if (Array.isArray(value)) {
+    const searchableValues = value
+      .map(convertToSearchableString)
+      .filter((val): val is string => val !== null);
+    return searchableValues.length > 0 ? searchableValues.join(" ") : null;
+  }
+
+  return null;
+}
+
+function getNestedValue<T>(obj: T, path: string): string | null {
+  const keys = path.split(".");
+  let current: unknown = obj;
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (current == null) return null;
+
+    if (Array.isArray(current)) {
+      const remainingPath = keys.slice(i).join(".");
+      const arrayValues = current
+        .map((item) => getNestedValue(item, remainingPath))
+        .filter((val): val is string => val !== null && val !== "");
+      return arrayValues.length > 0 ? arrayValues.join(" ") : null;
+    }
+
+    if (isRecord(current) && key in current) {
+      current = current[key];
+    } else {
+      return null;
+    }
+  }
+
+  return convertToSearchableString(current);
+}
+
+interface TableViewProps<T extends object> {
   items: T[];
   columns: Column[];
   renderCell: (item: T, columnKey: React.Key) => React.ReactNode;
@@ -33,10 +90,11 @@ interface TableViewProps<T extends Record<string, unknown>> {
   isLoading?: boolean;
   emptyMessage?: string;
   searchPlaceholder?: string;
-  searchKeys?: (keyof T)[];
+  searchKeys?: NestedKeyOf<T>[];
+  onRowClick?: (item: T) => void;
 }
 
-export function TableView<T extends Record<string, unknown>>({
+export function TableView<T extends object>({
   items,
   columns,
   renderCell,
@@ -45,6 +103,7 @@ export function TableView<T extends Record<string, unknown>>({
   emptyMessage = "No items found",
   searchPlaceholder = "Search...",
   searchKeys = [],
+  onRowClick,
 }: TableViewProps<T>) {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
@@ -69,17 +128,16 @@ export function TableView<T extends Record<string, unknown>>({
     );
   }, [visibleColumns, columns]);
 
+  // Step 1: Filter items based on search
   const filteredItems = useMemo(() => {
     let filtered = [...items];
 
     if (hasSearchFilter && searchKeys.length > 0) {
       filtered = filtered.filter((item) => {
         return searchKeys.some((key) => {
-          const value = item[key];
-          if (value == null) return false;
-          return String(value)
-            .toLowerCase()
-            .includes(filterValue.toLowerCase());
+          const value = getNestedValue(item, key as string);
+          if (value === null) return false;
+          return value.toLowerCase().includes(filterValue.toLowerCase());
         });
       });
     }
@@ -87,20 +145,16 @@ export function TableView<T extends Record<string, unknown>>({
     return filtered;
   }, [items, filterValue, hasSearchFilter, searchKeys]);
 
-  const pages = Math.ceil(filteredItems.length / rowsPerPage) || 1;
-
-  const paginatedItems = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
-
+  // Step 2: Sort ALL filtered items BEFORE pagination
+  // ✅ FIX: Sort the complete filtered list first
   const sortedItems = useMemo(() => {
-    return [...paginatedItems].sort((a: T, b: T) => {
+    return [...filteredItems].sort((a: T, b: T) => {
       const columnKey = sortDescriptor.column as keyof T;
       const first = a[columnKey];
       const second = b[columnKey];
 
+      // Handle null/undefined - keep them but push to end
+      if (first == null && second == null) return 0;
       if (first == null) return 1;
       if (second == null) return -1;
 
@@ -115,9 +169,19 @@ export function TableView<T extends Record<string, unknown>>({
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [sortDescriptor, paginatedItems]);
+  }, [filteredItems, sortDescriptor]);
 
-  // Top content (search & filters)
+  // Step 3: Calculate pages based on sorted items
+  const pages = Math.ceil(sortedItems.length / rowsPerPage) || 1;
+
+  // Step 4: Paginate the sorted items
+  // ✅ FIX: Slice from sortedItems instead of filteredItems
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return sortedItems.slice(start, end);
+  }, [page, sortedItems, rowsPerPage]);
+
   const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
@@ -141,7 +205,7 @@ export function TableView<T extends Record<string, unknown>>({
             <Dropdown
               showArrow
               classNames={{
-                base: "before:bg-[#1b211e] ", // change arrow background
+                base: "before:bg-[#1b211e]",
                 content: "p-0 border-small border-divider",
               }}
               radius="sm"
@@ -164,7 +228,6 @@ export function TableView<T extends Record<string, unknown>>({
                 onSelectionChange={setVisibleColumns}
                 classNames={{
                   base: "bg-[#1b211e] border border-admin-divider/60 shadow-xl backdrop-blur-sm rounded-lg p-1 overflow-hidden",
-                  // list: "bg-zinc-900",
                 }}
               >
                 {columns.map((column) => (
@@ -183,6 +246,11 @@ export function TableView<T extends Record<string, unknown>>({
         <div className="flex justify-between items-center">
           <span className="text-text-secondary text-small">
             Total {items.length} items
+            {filteredItems.length < items.length && (
+              <span className="text-yellow-500 ml-2">
+                ({filteredItems.length} shown)
+              </span>
+            )}
           </span>
           <label className="flex items-center text-text-secondary text-small">
             <span className="mr-2">Rows per page: </span>
@@ -224,6 +292,7 @@ export function TableView<T extends Record<string, unknown>>({
     visibleColumns,
     columns,
     items.length,
+    filteredItems.length,
     rowsPerPage,
     searchPlaceholder,
   ]);
@@ -234,7 +303,7 @@ export function TableView<T extends Record<string, unknown>>({
         <span className="w-[30%] text-small text-text-secondary">
           {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+            : `${selectedKeys.size} of ${sortedItems.length} selected`}
         </span>
 
         <Pagination
@@ -275,7 +344,7 @@ export function TableView<T extends Record<string, unknown>>({
         </div>
       </div>
     );
-  }, [selectedKeys, filteredItems.length, page, pages]);
+  }, [selectedKeys, sortedItems.length, page, pages]);
 
   return (
     <Table
@@ -285,23 +354,24 @@ export function TableView<T extends Record<string, unknown>>({
       bottomContentPlacement="outside"
       color="success"
       classNames={{
-        wrapper:
-          "max-h-[600px] bg-zinc-900/40 border border-admin-divider rounded-xl overflow-hidden",
+        wrapper: cn(
+          "max-h-full",
+          "bg-zinc-900/40 border border-admin-divider rounded-xl"
+        ),
         table: "bg-transparent",
         th: "bg-zinc-950/70 text-text-primary border-b border-admin-divider",
         td: "text-text-primary border-b border-admin-divider/30 bg-transparent",
-        // Fix selection / hover / focus colors
         tr: cn(
           "[&[data-hover=true]]:bg-emerald-950/40",
           "[&[data-selected=true]>*]:!text-white",
           "[&[data-disabled=true]>*]:!bg-black",
           "[&[data-hover=true] .heroui-cell]:!text-white",
           "data-[selected=true]:bg-emerald-900/50",
-          "data-[selected=true]:!text-emerald-100"
+          "data-[selected=true]:!text-emerald-100",
+          onRowClick && "cursor-pointer"
         ),
       }}
       selectedKeys={selectedKeys}
-      // selectionMode="multiple"
       sortDescriptor={sortDescriptor}
       topContent={topContent}
       topContentPlacement="outside"
@@ -321,7 +391,7 @@ export function TableView<T extends Record<string, unknown>>({
       </TableHeader>
       <TableBody
         emptyContent={emptyMessage}
-        items={sortedItems}
+        items={paginatedItems}
         isLoading={isLoading}
         loadingContent={
           <div className="flex items-center justify-center py-8">
@@ -330,7 +400,7 @@ export function TableView<T extends Record<string, unknown>>({
         }
       >
         {(item) => (
-          <TableRow key={getItemKey(item)}>
+          <TableRow key={getItemKey(item)} onClick={() => onRowClick?.(item)}>
             {(columnKey) => (
               <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}

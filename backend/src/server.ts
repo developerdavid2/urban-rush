@@ -16,6 +16,7 @@ import userRouter from "./routes/user.route";
 import reviewRouter from "./routes/review.route";
 import cartRouter from "./routes/cart.route";
 import paymentRouter from "./routes/payment.route";
+import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
 
@@ -77,6 +78,8 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use(errorMiddleware);
 
 // Mount API routes
 // app.use("/api", apiRouter);
