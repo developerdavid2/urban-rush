@@ -50,13 +50,13 @@ export function DashboardStatsCard({
   const getChartColor = (sentiment?: TrendSentiment) => {
     switch (sentiment) {
       case "positive":
-        return "#10b981"; // emerald-500/success
+        return "#10b981";
       case "negative":
-        return "#ef4444"; // danger
+        return "#ef4444";
       case "neutral":
-        return "#f59e0b"; // warning
+        return "#f59e0b";
       default:
-        return "#10b981"; // default emerald
+        return "#10b981";
     }
   };
 

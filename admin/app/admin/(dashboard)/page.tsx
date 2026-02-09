@@ -32,12 +32,20 @@ export default function DashboardPage() {
   const { data: earnings, isLoading: earningsLoading } = useEarningsAnalytics({
     period: earningsPeriod,
   });
-  const { data: topProducts } = useTopProducts({ limit: 5 });
-  const { data: geography } = useGeographyAnalytics({
-    period: geographyPeriod,
+  const { data: topProducts, isLoading: isLoadingProducts } = useTopProducts({
+    limit: 5,
   });
-  const { data: topCustomers } = useTopCustomers({ limit: 10 });
-  const { data: recentOrders } = useRecentOrders({ limit: 10, page: 1 });
+  const { data: geography, isLoading: isLoadingDemograph } =
+    useGeographyAnalytics({
+      period: geographyPeriod,
+    });
+  const { data: topCustomers, isLoading: isLoadingCustomers } = useTopCustomers(
+    { limit: 10 }
+  );
+  const { data: recentOrders, isLoading: isLoadingOrders } = useRecentOrders({
+    limit: 10,
+    page: 1,
+  });
 
   console.log("Earnings", earnings);
 
@@ -87,25 +95,39 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="group relative overflow-hidden rounded-xl lg:col-span-4 flex-1 bg-red-500 h-[500px]">
-          <DashboardProductsView />
+        <div className="group relative overflow-hidden rounded-xl lg:col-span-4 flex-1 h-[500px]">
+          <DashboardProductsView
+            data={topProducts?.data}
+            isLoading={isLoadingProducts}
+          />
         </div>
 
         {/* GROUP 2 - 2COL 60 to 40 */}
 
         {/* Customer Demograghy Chart plus top countries ranking  */}
-        <div className="group relative overflow-hidden rounded-xl h-full lg:col-span-7 bg-green-500">
-          <DashboardDemographyView />
+        <div className="group relative overflow-hidden rounded-xl h-full lg:col-span-8">
+          <DashboardDemographyView
+            data={geography?.data}
+            isLoading={isLoadingDemograph}
+            period={geographyPeriod}
+            onPeriodChange={setGeographyPeriod}
+          />
         </div>
-        <div className="group relative overflow-hidden rounded-xl h-[400px] lg:col-span-5 bg-violet-500">
+        <div className="group relative overflow-hidden rounded-xl lg:col-span-4">
           {/* Top Customers List with amount spent */}
-          <DashboardCustomersView />
+          <DashboardCustomersView
+            data={topCustomers?.data}
+            isLoading={isLoadingCustomers}
+          />
         </div>
 
         {/* GROUP 3  -100%*/}
         {/* Recent Orders table */}
-        <div className="w-full col-span-full h-[600px] bg-amber-700 rounded-xl">
-          <DashboardOrdersView />
+        <div className="w-full col-span-full h-[600px] rounded-xl">
+          <DashboardOrdersView
+            data={recentOrders?.data}
+            isLoading={isLoadingOrders}
+          />
         </div>
       </div>
     </div>
