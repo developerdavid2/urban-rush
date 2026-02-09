@@ -79,6 +79,7 @@ export interface TopCustomer {
   clerkId: string;
   name: string;
   email: string;
+  image: string;
   totalSpent: number;
   orderCount: number;
   lastOrderDate: string;

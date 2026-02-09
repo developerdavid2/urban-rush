@@ -104,7 +104,7 @@ export function getOrderStatusConfig(status: OrderStatus): OrderStatusConfig {
       label: "Processing",
       color: "info",
       bgClass: "bg-info/10",
-      textClass: "text-info",
+      textClass: "text-blue-400",
       borderClass: "border-info/20",
     },
     shipped: {

@@ -145,7 +145,7 @@ export function AdminSidebar() {
                     delay={0}
                     classNames={{
                       content:
-                        "bg-surface text-text-primary border border-emerald-500/20",
+                        "bg-admin-surface text-text-primary border border-emerald-500/20",
                     }}
                   >
                     {buttonContent}

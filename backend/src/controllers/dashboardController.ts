@@ -410,6 +410,7 @@ export const getTopCustomers = async (req: Request, res: Response) => {
           clerkId: 1,
           name: { $arrayElemAt: ["$userDetails.name", 0] },
           email: { $arrayElemAt: ["$userDetails.email", 0] },
+          image: { $arrayElemAt: ["$userDetails.profileImageUrl", 0] },
           totalSpent: 1,
           orderCount: 1,
           lastOrderDate: 1,
