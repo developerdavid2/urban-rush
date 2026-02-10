@@ -1,67 +1,123 @@
 // lib/country-flags.ts or utils/country-flags.ts
 
-import * as flags from "country-flag-icons/react/3x2";
+/**
+ * Country Flag Utilities using flagcdn.com CDN
+ * No package installation required - uses external CDN for flag images
+ */
 
 /**
- * Maps country names to ISO 3166-1 alpha-2 country codes
- * Used for rendering flag components
+ * Maps country names to ISO 3166-1 alpha-2 country codes (lowercase)
+ * Used for fetching flags from flagcdn.com
  */
-export const COUNTRY_CODE_MAP: Record<string, keyof typeof flags> = {
-  "United States": "US",
-  "United Kingdom": "GB",
-  Canada: "CA",
-  Australia: "AU",
-  Germany: "DE",
-  France: "FR",
-  Nigeria: "NG",
-  "South Africa": "ZA",
-  India: "IN",
-  China: "CN",
-  Belgium: "BE",
-  "Costa Rica": "CR",
-  Austria: "AT",
-  Brazil: "BR",
-  Mexico: "MX",
-  Spain: "ES",
-  Italy: "IT",
-  Japan: "JP",
-  Netherlands: "NL",
-  Sweden: "SE",
-  Norway: "NO",
-  Denmark: "DK",
-  Finland: "FI",
-  Switzerland: "CH",
-  Portugal: "PT",
-  Poland: "PL",
-  Greece: "GR",
-  Ireland: "IE",
-  "New Zealand": "NZ",
-  Singapore: "SG",
-  "South Korea": "KR",
-  Thailand: "TH",
-  Malaysia: "MY",
-  Indonesia: "ID",
-  Philippines: "PH",
-  Vietnam: "VN",
-  Egypt: "EG",
-  Kenya: "KE",
-  Ghana: "GH",
-  Morocco: "MA",
-  Argentina: "AR",
-  Chile: "CL",
-  Colombia: "CO",
-  Peru: "PE",
-  Venezuela: "VE",
-  "Saudi Arabia": "SA",
-  "United Arab Emirates": "AE",
-  Israel: "IL",
-  Turkey: "TR",
-  Russia: "RU",
-  Ukraine: "UA",
-  Romania: "RO",
-  "Czech Republic": "CZ",
-  Hungary: "HU",
-  Bulgaria: "BG",
+export const COUNTRY_CODE_MAP: Record<string, string> = {
+  "United States": "us",
+  "United Kingdom": "gb",
+  Canada: "ca",
+  Australia: "au",
+  Germany: "de",
+  France: "fr",
+  Nigeria: "ng",
+  "South Africa": "za",
+  India: "in",
+  China: "cn",
+  Belgium: "be",
+  "Costa Rica": "cr",
+  Austria: "at",
+  Brazil: "br",
+  Mexico: "mx",
+  Spain: "es",
+  Italy: "it",
+  Japan: "jp",
+  Netherlands: "nl",
+  Sweden: "se",
+  Norway: "no",
+  Denmark: "dk",
+  Finland: "fi",
+  Switzerland: "ch",
+  Portugal: "pt",
+  Poland: "pl",
+  Greece: "gr",
+  Ireland: "ie",
+  "New Zealand": "nz",
+  Singapore: "sg",
+  "South Korea": "kr",
+  Thailand: "th",
+  Malaysia: "my",
+  Indonesia: "id",
+  Philippines: "ph",
+  Vietnam: "vn",
+  Egypt: "eg",
+  Kenya: "ke",
+  Ghana: "gh",
+  Morocco: "ma",
+  Argentina: "ar",
+  Chile: "cl",
+  Colombia: "co",
+  Peru: "pe",
+  Venezuela: "ve",
+  "Saudi Arabia": "sa",
+  "United Arab Emirates": "ae",
+  Israel: "il",
+  Turkey: "tr",
+  Russia: "ru",
+  Ukraine: "ua",
+  Romania: "ro",
+  "Czech Republic": "cz",
+  Hungary: "hu",
+  Bulgaria: "bg",
+  Pakistan: "pk",
+  Bangladesh: "bd",
+  Taiwan: "tw",
+  "Hong Kong": "hk",
+  Ethiopia: "et",
+  Tanzania: "tz",
+  Uganda: "ug",
+  Algeria: "dz",
+  Tunisia: "tn",
+  Lebanon: "lb",
+  Jordan: "jo",
+  Iraq: "iq",
+  Iran: "ir",
+  Afghanistan: "af",
+  Kazakhstan: "kz",
+  Uzbekistan: "uz",
+  Myanmar: "mm",
+  Cambodia: "kh",
+  Laos: "la",
+  Nepal: "np",
+  "Sri Lanka": "lk",
+  Luxembourg: "lu",
+  Iceland: "is",
+  Croatia: "hr",
+  Serbia: "rs",
+  Slovakia: "sk",
+  Slovenia: "si",
+  Estonia: "ee",
+  Latvia: "lv",
+  Lithuania: "lt",
+  Malta: "mt",
+  Cyprus: "cy",
+  Albania: "al",
+  "Bosnia and Herzegovina": "ba",
+  Montenegro: "me",
+  "North Macedonia": "mk",
+  Georgia: "ge",
+  Armenia: "am",
+  Azerbaijan: "az",
+  Belarus: "by",
+  Moldova: "md",
+  Andorra: "ad",
+  Monaco: "mc",
+  Liechtenstein: "li",
+  "San Marino": "sm",
+  Vatican: "va",
+  Qatar: "qa",
+  Kuwait: "kw",
+  Bahrain: "bh",
+  Oman: "om",
+  Yemen: "ye",
+  Syria: "sy",
+  Palestine: "ps",
 };
 
 /**
@@ -124,15 +180,39 @@ export const COUNTRY_COORDINATES: Record<string, [number, number]> = {
   "Czech Republic": [15.5, 49.8],
   Hungary: [19.5, 47],
   Bulgaria: [25, 43],
+  Pakistan: [69, 30],
+  Bangladesh: [90, 24],
+  Taiwan: [121, 24],
+  "Hong Kong": [114, 22],
 };
 
 /**
  * Get the ISO country code for a given country name
  * @param country - Full country name
- * @returns ISO 3166-1 alpha-2 code or null if not found
+ * @returns ISO 3166-1 alpha-2 code (lowercase) or null if not found
  */
-export const getCountryCode = (country: string): keyof typeof flags | null => {
+export const getCountryCode = (country: string): string | null => {
   return COUNTRY_CODE_MAP[country] || null;
+};
+
+/**
+ * Get flag image URL from flagcdn.com
+ * @param countryCode - ISO 3166-1 alpha-2 code (lowercase)
+ * @param size - Image size (w20, w40, w80, w160, w320)
+ * @returns URL to flag image
+ *
+ * Available sizes:
+ * - w20: 20px width
+ * - w40: 40px width (default)
+ * - w80: 80px width
+ * - w160: 160px width
+ * - w320: 320px width
+ */
+export const getCountryFlagUrl = (
+  countryCode: string,
+  size: "w20" | "w40" | "w80" | "w160" | "w320" = "w40"
+): string => {
+  return `https://flagcdn.com/${size}/${countryCode}.png`;
 };
 
 /**
@@ -147,14 +227,16 @@ export const getCountryCoordinates = (
 };
 
 /**
- * Get the flag component for a country
+ * Get flag URL directly from country name
  * @param country - Full country name
- * @returns Flag component or null if not found
+ * @param size - Image size
+ * @returns URL to flag image or null if country not found
  */
-export const getFlagComponent = (
-  country: string
-): ((props: any) => JSX.Element) | null => {
+export const getFlagUrl = (
+  country: string,
+  size: "w20" | "w40" | "w80" | "w160" | "w320" = "w40"
+): string | null => {
   const code = getCountryCode(country);
   if (!code) return null;
-  return flags[code];
+  return getCountryFlagUrl(code, size);
 };

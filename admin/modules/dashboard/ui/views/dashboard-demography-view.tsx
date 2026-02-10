@@ -17,7 +17,7 @@ import {
   CountryData,
 } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
-import * as flags from "country-flag-icons/react/3x2";
+import Image from "next/image";
 
 interface DashboardDemographyViewProps {
   data?: GeographyAnalytics;
@@ -29,42 +29,120 @@ interface DashboardDemographyViewProps {
 // World map GeoJSON URL (TopoJSON format)
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// Country code mapping for flag components
-const getCountryCode = (country: string): keyof typeof flags | null => {
-  const countryCodeMap: Record<string, keyof typeof flags> = {
-    "United States": "US",
-    "United Kingdom": "GB",
-    Canada: "CA",
-    Australia: "AU",
-    Germany: "DE",
-    France: "FR",
-    Nigeria: "NG",
-    "South Africa": "ZA",
-    India: "IN",
-    China: "CN",
-    Belgium: "BE",
-    "Costa Rica": "CR",
-    Austria: "AT",
-    Brazil: "BR",
-    Mexico: "MX",
-    Spain: "ES",
-    Italy: "IT",
-    Japan: "JP",
-    Netherlands: "NL",
-    Sweden: "SE",
+// Country name to ISO 3166-1 alpha-2 code mapping
+const getCountryCode = (country: string): string | null => {
+  const countryCodeMap: Record<string, string> = {
+    "United States": "us",
+    "United Kingdom": "gb",
+    Canada: "ca",
+    Australia: "au",
+    Germany: "de",
+    France: "fr",
+    Nigeria: "ng",
+    "South Africa": "za",
+    India: "in",
+    China: "cn",
+    Belgium: "be",
+    "Costa Rica": "cr",
+    Austria: "at",
+    Brazil: "br",
+    Mexico: "mx",
+    Spain: "es",
+    Italy: "it",
+    Japan: "jp",
+    Netherlands: "nl",
+    Sweden: "se",
+    Norway: "no",
+    Denmark: "dk",
+    Finland: "fi",
+    Switzerland: "ch",
+    Portugal: "pt",
+    Poland: "pl",
+    Greece: "gr",
+    Ireland: "ie",
+    "New Zealand": "nz",
+    Singapore: "sg",
+    "South Korea": "kr",
+    Thailand: "th",
+    Malaysia: "my",
+    Indonesia: "id",
+    Philippines: "ph",
+    Vietnam: "vn",
+    Egypt: "eg",
+    Kenya: "ke",
+    Ghana: "gh",
+    Morocco: "ma",
+    Argentina: "ar",
+    Chile: "cl",
+    Colombia: "co",
+    Peru: "pe",
+    Venezuela: "ve",
+    "Saudi Arabia": "sa",
+    "United Arab Emirates": "ae",
+    Israel: "il",
+    Turkey: "tr",
+    Russia: "ru",
+    Ukraine: "ua",
+    Romania: "ro",
+    "Czech Republic": "cz",
+    Hungary: "hu",
+    Bulgaria: "bg",
+    Pakistan: "pk",
+    Bangladesh: "bd",
+    Taiwan: "tw",
+    "Hong Kong": "hk",
+    Ethiopia: "et",
+    Tanzania: "tz",
+    Uganda: "ug",
+    Algeria: "dz",
+    Tunisia: "tn",
+    Lebanon: "lb",
+    Jordan: "jo",
+    Iraq: "iq",
+    Iran: "ir",
+    Afghanistan: "af",
+    Kazakhstan: "kz",
+    Uzbekistan: "uz",
+    Myanmar: "mm",
+    Cambodia: "kh",
+    Laos: "la",
+    Nepal: "np",
+    "Sri Lanka": "lk",
+    Luxembourg: "lu",
+    Iceland: "is",
+    Croatia: "hr",
+    Serbia: "rs",
+    Slovakia: "sk",
+    Slovenia: "si",
+    Estonia: "ee",
+    Latvia: "lv",
+    Lithuania: "lt",
+    Malta: "mt",
+    Cyprus: "cy",
   };
   return countryCodeMap[country] || null;
 };
 
-// Flag component helper
+// Get flag URL from flagcdn.com
+const getCountryFlagUrl = (
+  countryCode: string,
+  size: "w20" | "w40" | "w80" | "w160" = "w40"
+): string => {
+  return `https://flagcdn.com/${size}/${countryCode}.png`;
+};
+
+// Flag component using CDN
 const CountryFlag = ({
   country,
   className,
+  size = "w40",
 }: {
   country: string;
   className?: string;
+  size?: "w20" | "w40" | "w80" | "w160";
 }) => {
   const countryCode = getCountryCode(country);
+
   if (!countryCode) {
     return (
       <div
@@ -75,8 +153,16 @@ const CountryFlag = ({
     );
   }
 
-  const FlagComponent = flags[countryCode];
-  return <FlagComponent className={className} />;
+  return (
+    <Image
+      src={getCountryFlagUrl(countryCode, size)}
+      alt={`${country} flag`}
+      className={className}
+      loading="lazy"
+      width={40}
+      height={40}
+    />
+  );
 };
 
 // Get country coordinates for markers
@@ -102,6 +188,45 @@ const getCountryCoordinates = (country: string): [number, number] | null => {
     Japan: [138, 36],
     Netherlands: [5.3, 52.1],
     Sweden: [15, 62],
+    Norway: [9, 61],
+    Denmark: [10, 56],
+    Finland: [26, 64],
+    Switzerland: [8, 47],
+    Portugal: [-8, 39.5],
+    Poland: [19, 52],
+    Greece: [22, 39],
+    Ireland: [-8, 53],
+    "New Zealand": [174, -41],
+    Singapore: [103.8, 1.3],
+    "South Korea": [127.5, 37],
+    Thailand: [101, 15],
+    Malaysia: [102, 4],
+    Indonesia: [113, -2],
+    Philippines: [122, 13],
+    Vietnam: [106, 16],
+    Egypt: [30, 26],
+    Kenya: [37, 1],
+    Ghana: [-2, 8],
+    Morocco: [-7, 32],
+    Argentina: [-64, -34],
+    Chile: [-71, -30],
+    Colombia: [-74, 4],
+    Peru: [-76, -10],
+    Venezuela: [-66, 8],
+    "Saudi Arabia": [45, 24],
+    "United Arab Emirates": [54, 24],
+    Israel: [35, 31],
+    Turkey: [35, 39],
+    Russia: [100, 60],
+    Ukraine: [32, 49],
+    Romania: [25, 46],
+    "Czech Republic": [15.5, 49.8],
+    Hungary: [19.5, 47],
+    Bulgaria: [25, 43],
+    Pakistan: [69, 30],
+    Bangladesh: [90, 24],
+    Taiwan: [121, 24],
+    "Hong Kong": [114, 22],
   };
   return coords[country] || null;
 };
@@ -311,7 +436,8 @@ export default function DashboardDemographyView({
                     <div className="flex items-center gap-2">
                       <CountryFlag
                         country={hoveredCountry}
-                        className="w-5 h-4 rounded-sm object-cover"
+                        size="w40"
+                        className="w-6 h-4 rounded-sm object-cover shadow-sm"
                       />
                       <p className="font-semibold text-sm">{hoveredCountry}</p>
                     </div>
@@ -384,10 +510,11 @@ export default function DashboardDemographyView({
                     )}
                   >
                     {/* Flag */}
-                    <div className="flex items-center justify-center size-10 shrink-0 overflow-hidden rounded-full border border-zinc-700/50">
+                    <div className="flex items-center justify-center w-10 h-7 shrink-0 overflow-hidden rounded border border-zinc-700/50 bg-zinc-900/50">
                       <CountryFlag
                         country={country.country}
-                        className="object-cover size-12!"
+                        size="w40"
+                        className="w-full h-full object-cover"
                       />
                     </div>
 
