@@ -7,7 +7,6 @@ import {
   getPaymentStatusConfig,
 } from "@/lib/dashboard-utils";
 import { Column, TableView } from "@/modules/components/table-view";
-import { OrderDetailModal } from "@/modules/orders/ui/components/order-modal";
 import { Order } from "@/types/order";
 import { Avatar, AvatarGroup, Chip } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -314,11 +313,6 @@ export default function OrdersPage() {
           />
         )}
       </div>
-      <OrderDetailModal
-        order={selectedOrder}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </>
   );
 }

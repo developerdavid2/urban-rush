@@ -17,7 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { today, getLocalTimeZone } from "@internationalized/date";
-import type { RangeValue, DateValue } from "@react-types/calendar";
+import type { DateValue } from "@internationalized/date";
 import { cn } from "@/lib/utils";
 import { EarningsAnalytics, EarningsPeriod } from "@/types/dashboard";
 
@@ -98,8 +98,10 @@ export default function DashboardEarningsView({
   period,
   onPeriodChange,
 }: DashboardEarningsViewProps) {
-  const [customDateRange, setCustomDateRange] =
-    useState<RangeValue<DateValue> | null>(null);
+  const [customDateRange, setCustomDateRange] = useState<{
+    start: DateValue;
+    end: DateValue;
+  } | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const formatDateRange = () => {
